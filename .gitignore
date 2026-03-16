@@ -1,5 +1,3 @@
-
-
 # --- Secrets & Credentials (CRITICAL) ---
 .env
 .env.*
@@ -65,10 +63,6 @@ coverage.xml
 !config/*.json
 !examples/*.csv
 !seeds/*.csv
-# data/raw ska aldrig in
-!data/processed/
-!data/tmp/
-!data/raw/
 
 # men tillåt små fixtures/exempel
 !data/fixtures/**/*.json
@@ -92,3 +86,32 @@ mysql_data/
 mongo_data/
 docker/.env
 
+
+# --- Data Lake: Lokalt lagrad data (ALDRIG i git) ---
+data/bronze/
+data/silver/
+data/gold/
+
+# --- Apache Spark ---
+spark-warehouse/
+derby.log
+metastore_db/
+*.crc                               # Spark checksum-filer
+
+# --- dbt ---
+dbt/target/
+dbt/logs/
+dbt/.user.yml
+dbt/profiles.yml                    # Innehåller connection strings
+
+# --- Apache Airflow ---
+airflow/logs/
+airflow/plugins/
+airflow.db
+airflow.cfg                         # Kan innehålla känslig info
+
+# --- Kafka / Confluent ---
+kafka-logs/
+
+# --- GitHub Archive bootstrap ---
+*.json.gz                           # Komprimerade GH Archive-filer
