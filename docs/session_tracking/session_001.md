@@ -9,11 +9,14 @@
     
 **Saturday 21/03/2026**
 *Goals for today:*
-- Setup config.py for repo
+- Write config.py in repo
     - **Done**
 
-- Setup producer.py in repo
+- Write kafka_producer.py in repo
+    - **Done**
+
+- Write kafka_consumer.py in repo
     - Ongoing
 
-- Write small docs for todays session
+- Write small docs for todays session (config, kafka_producer and kafka_consumer)
     - **Done**

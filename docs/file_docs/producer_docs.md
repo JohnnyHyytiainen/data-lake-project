@@ -20,7 +20,7 @@ Jag kör `poll(0)` inne i loopen för att ge Kafka chansen att skicka löpande. 
 
 `seen_ids: set[str]` - GitHub Events API är inte en stream, det är en snapshot. Varje gång du pollar får du de 300 senaste events. Om communityt är lugnt kanske bara 5 nya events har dykt upp sedan förra poll - de andra 295 har du redan sett. Utan `seen_ids` skickar du dem till Kafka igen och igen.
 
-`_is_de_relevant()` i producern - vi diskuterade detta i teorin: filtrera tidigt. Det finns en medveten designbeslut här som är värd att förstå. Bronze ska inte vara en soptipp av allt GitHub producerar — det ska vara rådata vi valt att samla in. Det är skillnaden mellan att spara en hel sjö och att samla regnvatten i en tunna.
+`_is_de_relevant()` i producern - vi diskuterade detta i teorin: filtrera tidigt. Det finns en medveten designbeslut här som är värd att förstå. Bronze ska inte vara en soptipp av allt GitHub producerar - det ska vara rådata vi valt att samla in. Det är skillnaden mellan att spara en hel sjö och att samla regnvatten i en tunna.
 
 
 ## I data lake projektet jobbar producern så här jämfört med dataplatform development labben
@@ -37,3 +37,20 @@ Här är det annorlunda. I det här projektet är producern som en prenumration 
 1: Polla api.github.com/events var femte minut.
 2: Skicka varje event vidare till Kafka Topic.
 3: Thats it!
+```
+
+## Visual explanation on where producer works and the processes it handles
+```
+GitHub API          Producer               Kafka Topic
+    │                   │                       │
+    │    (sover)        │                       │
+    │                   │                       │
+    │◄── GET /events ───│  (vaknar var 5:e min) │
+    │─── 300 events ───►│                       │
+    │                   │── produce(event) ────►│
+    │                   │── produce(event) ────►│
+    │                   │── produce(event) ────►│  (alla 300)
+    │                   │                       │
+    │                   │  (sover igen)         │
+    │                   │                       │
+```
