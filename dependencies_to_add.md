@@ -1,4 +1,4 @@
-# pyproject.toml
+# Deps to add into pyproject.toml depending on current MvP iteration
 
 [project]
 name = "github-data-lake"
