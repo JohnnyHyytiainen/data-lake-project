@@ -54,7 +54,6 @@ DE_KEYWORDS = [
     "trino",
     "pyspark",
     "polars",
-    "pytorch",
     "data-engineering",
     "data-engineer",
 ]
