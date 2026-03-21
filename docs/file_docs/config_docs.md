@@ -1,0 +1,1 @@
+# Own docs for config.py script
