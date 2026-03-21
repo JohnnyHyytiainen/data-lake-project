@@ -1,4 +1,4 @@
-# producer.py - For ingestion
+# kafka_producer.py - For ingestion
 # Kommentarer: Svenska
 # Kod: Engelska
 import json

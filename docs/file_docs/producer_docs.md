@@ -37,3 +37,20 @@ Här är det annorlunda. I det här projektet är producern som en prenumration 
 1: Polla api.github.com/events var femte minut.
 2: Skicka varje event vidare till Kafka Topic.
 3: Thats it!
+```
+
+## Visual explanation on where producer works and the processes it handles
+```
+GitHub API          Producer               Kafka Topic
+    │                   │                       │
+    │    (sover)        │                       │
+    │                   │                       │
+    │◄── GET /events ───│  (vaknar var 5:e min) │
+    │─── 300 events ───►│                       │
+    │                   │── produce(event) ────►│
+    │                   │── produce(event) ────►│
+    │                   │── produce(event) ────►│  (alla 300)
+    │                   │                       │
+    │                   │  (sover igen)         │
+    │                   │                       │
+```
