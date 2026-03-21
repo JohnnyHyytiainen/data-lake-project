@@ -31,3 +31,12 @@ Om jag committade offset till Kafka först och sen kraschade innan Parquet-filen
 De eventen är borta för alltid. Genom att skriva till disk först och sedan bekräfta till Kafka garanterar jag att om något går fel, kör jag om från samma offset och skriver filen igen. Parquet-skrivning är idempotent, att skriva samma data två gånger är ofarligt. Att tappa data är inte det.
 Det är samma tanke som låg bakom .upsert() i Glossary DB. Hellre en gång för mycket än en gång för lite.
 ```
+
+## De tre viktiga koncepten att tänka på med consumer scriptet.
+
+- Manuell offset-commit är det viktigaste designbeslutet i hela filen. `enable.auto.commit: False` betyder att Kafka aldrig automatiskt markerar ett meddelande som "hanterat". Det är jag som bestämmer det, och jag gör det efter att data är säkert på disk. Det är den viktigaste filosofin i arbete med data: **data till disk är alltid prio ett**
+
+- Batch-flush med dubbelt villkor fungerar som en säkerhetsventil i två riktningar. `BATCH_SIZE=100` "skyddar" mot att batchen växer obegränsat under hög belastning. `BATCH_TIMEOUT_SEC=60` skyddar mot det omvända, att en batch aldrig skrivs för att communityt är lugnt och events droppar in långsamt. Utan timeout villkoret skulle data kunna sitta i minnet i timmar utan att nå disk.
+
+- `KeyboardInterrupt` hanteringen är en detalj som separerar produktionskod från skol-kod. När jag trycker Ctrl+C för att stoppa consumern skulle en naiv implementation bara dö och tappa allt som samlats i batchen sedan senaste flush. Den här implementationen fångar signalen, skriver det som finns kvar, committar till Kafka, och stänger sedan rent. 
+Det kallas för *graceful shutdown* och är vad jag förstått ett standardkrav i alla system som finns i produktion.
