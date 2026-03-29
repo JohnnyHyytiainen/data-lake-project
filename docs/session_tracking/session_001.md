@@ -44,6 +44,10 @@
 - Write what `bronze_to_silver.py` script does in docs/file_docs/bronze_to_silver.md
     - **Done**
 
+**Testing**
+- Write unit tests for `_is_valid()` and `_flatten()` functions in bronze_to_silver.py script.
+    - **Done**
+    
 **CI-PIPE**
 - Add more to my github actions CI pipeline before committing `bronze_to_silver.py`-script.
-    - 
+    - **Done**
