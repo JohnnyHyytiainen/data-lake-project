@@ -16,7 +16,23 @@
     - **Done**
 
 - Write kafka_consumer.py in repo
-    - Ongoing
+    - **Done**
 
 - Write small docs for todays session (config, kafka_producer and kafka_consumer)
+    - **Done**
+
+
+**Sunday 29/03/2026**
+*Goals for today:*
+- Added visuals in form of .mmd diagrams to show flow with KRaft instead of Zookeeper for kafka
+    - **Done**
+
+- Configure Dockerfile + docker-compose.yml file
+    - **Done**
+
+- Fetch my first events from github
+    - **Done**
+
+- Removed keyword filter in producer to see if pipeline was working. It is!
+- (3 .parquet files to disk. Hivestyle partitioning works as intended)
     - **Done**

@@ -2,6 +2,7 @@
 # Kommentarer: Svenska
 # Kod: Engelska
 import json
+import time
 from datetime import datetime, timezone
 
 import pyarrow as pa
@@ -141,7 +142,13 @@ def run_consumer() -> None:
                         f"End of partition reached: {msg.topic()} [{msg.partition()}]"
                     )
                 else:
-                    raise KafkaException(msg.error())
+                    if msg.error().code() == KafkaError.UNKNOWN_TOPIC_OR_PART:
+                        # Topic existerar inte än, producer har ej skickat något
+                        # Vänta lite och försök igen istället för att krascha.
+                        logger.warning("Topic not available yet, retrying in 5 sec..")
+                        time.sleep(5)
+                    else:
+                        raise KafkaException(msg.error())
             else:
                 # Deserializera JSON string tillbaka till en dict
                 try:
