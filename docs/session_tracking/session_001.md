@@ -36,3 +36,18 @@
 - Removed keyword filter in producer to see if pipeline was working. It is!
 - (3 .parquet files to disk. Hivestyle partitioning works as intended)
     - **Done**
+
+**BRONZE TO SILVER**
+- Write `bronze_to_silver.py` script.
+    - **Done**
+
+- Write what `bronze_to_silver.py` script does in docs/file_docs/bronze_to_silver.md
+    - **Done**
+
+**Testing**
+- Write unit tests for `_is_valid()` and `_flatten()` functions in bronze_to_silver.py script.
+    - **Done**
+    
+**CI-PIPE**
+- Add more to my github actions CI pipeline before committing `bronze_to_silver.py`-script.
+    - **Done**

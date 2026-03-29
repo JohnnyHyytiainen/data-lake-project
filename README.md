@@ -73,7 +73,7 @@ github-data-lake/
 │   └── session_tracking/                 # Lärloggar per session
 │       └── session_001.md
 │
-├── docker-compose.yml                    # Kafka + Zookeeper (+ senare Airflow)
+├── docker-compose.yml                    # Kafka + KRaft (+ senare Airflow)
 ├── .env                                  # Gitignorerad
 ├── .env.example                          # Committad (inga riktiga värden)
 ├── .gitignore

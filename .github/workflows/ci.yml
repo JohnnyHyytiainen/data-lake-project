@@ -1,4 +1,4 @@
-name: Ci pipe - linting and format
+name: Ci pipe - linting, formatering och unit testing
 
 # 1) TRIGGERS: När ska pipen vakna?
 on:
@@ -40,3 +40,7 @@ jobs:
       # Steg F) Kör Ruff för att kolla formatering
       - name: Format check using Ruff
         run: uv run ruff format --check .
+
+        # Steg G) Kör testerna på vår kod vi pushar. Om detta MISSLYCKAS -> Pull requesten STOPPAS.
+      - name: Run Unit tests
+        run: uv run pytest tests/
