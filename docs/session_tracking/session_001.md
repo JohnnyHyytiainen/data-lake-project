@@ -39,7 +39,9 @@
 
 **BRONZE TO SILVER**
 - Write `bronze_to_silver.py` script.
-    - 
+    - **Done**
 
 - Write what `bronze_to_silver.py` script does in docs/file_docs/bronze_to_silver.md
-    - 
+    - **Done**
+
+    

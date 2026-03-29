@@ -33,3 +33,12 @@ Silver är där min data slutar vara "data jag fick" och börjar vara "data att 
 
 **NOTERA:**
 - En viktig sak för min MVP v1: Här använder jag mig av Pandas och **inte** PySpark. PySpark kommer i MVP v2. Pandas räcker perfekt för de volymer jag har nu och är enklare att debugga. När jag väl har hela min Silver logik klar och testad är det ett "relativt" litet steg att porta det till PySpark, då logiken bör förblir densamma, bara syntaxen byter skepnad.
+
+
+## De tre viktiga designbeslut i bronze_to_silver.py som är kritiska att förstå på djupet:
+
+1) Det första är att Bronze aldrig ska röras. `run_bronze_to_silver()` läser från `BRONZE_DIR` och skriver till `SILVER_DIR` och `DLQ_DIR`. Det är en enkelriktad väg. Om Jag om sex månader inser att min `_is_valid()` funktion hade en bugg och felaktigt skickade bra events till DLQ, inga problem, Bronze har dem fortfarande och jag kan köra om transformationen med fixad kod. Det är den fundamentala filosofiska skillnaden jämfört med Dataplatform Dev kursens DLQ i `consumern`.
+
+2) Det andra är varför jag deduplicerar i Silver och inte i Bronze. I Bronze vill jag ha en exakt avspegling av vad som faktiskt kom in i systemet, dubbletter och allt. Om producern av någon anledning skickade ett event två gånger till Kafka är det ett faktum som ska dokumenteras i Bronze. Silver är däremot platsen där en förbereder data för analys, och i en analys vill du aldrig att samma commit räknas två gånger i ett aktivitetsdiagram.
+
+3) Det tredje är att `_flatten()` är medvetet selektiv. Jag plockar inte ut allt från raw eventet, bara det som faktiskt behövs för att svara på Gold-lagrets frågor. `pr_action` och `pr_merged` är valfria och sätts till None för event-typer där de inte existerar, vilket är fullt acceptabelt i Silver. Gold-lagret filtrerar sedan på event_type för att arbeta med rätt delmängd.
