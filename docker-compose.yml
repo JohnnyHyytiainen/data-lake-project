@@ -41,6 +41,7 @@ services:
     env_file: .env
     environment:
       KAFKA_BROKER: kafka:9092       # Intern adress - inte localhost
+      PYTHONUNBUFFERED: "1"    # Tvingar Python att skriva logs direkt
     depends_on:
       kafka:
         condition: service_healthy   # Väntar tills Kafka är redo
@@ -54,6 +55,7 @@ services:
     env_file: .env
     environment:
       KAFKA_BROKER: kafka:9092
+      PYTHONUNBUFFERED: "1"    # Tvingar Python att skriva logs direkt
     depends_on:
       kafka:
         condition: service_healthy
