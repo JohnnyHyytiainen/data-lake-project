@@ -65,4 +65,4 @@ LOG_DIR = ROOT_DIR / "logs"
 # --- Partitionering ---
 # Använder sig av hive style folder strukturen i data/bronze year/month/day
 # Pyspark ska förstå den strukturen utan att behöva ändra någonting eller tänka på nåt specifikt.
-DATA_PARTITION_FORMAT = "year={year}/month={month:02d}/day={day:02d}"
+DATE_PARTITION_FORMAT = "year={year}/month={month:02d}/day={day:02d}"
