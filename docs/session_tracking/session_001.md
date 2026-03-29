@@ -44,4 +44,6 @@
 - Write what `bronze_to_silver.py` script does in docs/file_docs/bronze_to_silver.md
     - **Done**
 
-    
+**CI-PIPE**
+- Add more to my github actions CI pipeline before committing `bronze_to_silver.py`-script.
+    - 
