@@ -43,4 +43,4 @@ jobs:
 
         # Steg G) Kör testerna på vår kod vi pushar. Om detta MISSLYCKAS -> Pull requesten STOPPAS.
       - name: Run Unit tests
-        run: uv run pytest test/
+        run: uv run pytest tests/
