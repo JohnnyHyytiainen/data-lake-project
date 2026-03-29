@@ -28,7 +28,11 @@
     - **Done**
 
 - Configure Dockerfile + docker-compose.yml file
-    - 
+    - **Done**
 
 - Fetch my first events from github
-    - 
+    - **Done**
+
+- Removed keyword filter in producer to see if pipeline was working. It is!
+- (3 .parquet files to disk. Hivestyle partitioning works as intended)
+    - **Done**
