@@ -27,7 +27,7 @@ KAFKA_GROUP_ID = "github-lake-consumer-group"
 # --- Github API ---
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Automatiskt None om ej satt, 60requests/h
 GITHUB_EVENTS_URL = "https://api.github.com/events?per_page=100"
-POLL_INTERVAL_SEC = 120  # 300 sek mellan varje poll, 5 min.
+POLL_INTERVAL_SEC = 120  # 120 sek mellan varje poll, 2 min.
 
 # -- Event typer jag bryr mig om ---
 RELEVANT_EVENT_TYPES = {
