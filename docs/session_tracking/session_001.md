@@ -36,3 +36,10 @@
 - Removed keyword filter in producer to see if pipeline was working. It is!
 - (3 .parquet files to disk. Hivestyle partitioning works as intended)
     - **Done**
+
+**BRONZE TO SILVER**
+- Write `bronze_to_silver.py` script.
+    - 
+
+- Write what `bronze_to_silver.py` script does in docs/file_docs/bronze_to_silver.md
+    - 
