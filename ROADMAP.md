@@ -78,10 +78,12 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-1. Idempotensfix i `bronze_to_silver.py` (MVP v1, sista öppna punkten)
-2. `README.md` grundstruktur
+1. Skriva .mmd kod för att brygga gappet mellan teori och praktik. 
+2. Skriva docs kring `bootstrap_historical.py`
 3. Grena ut till `feat/silver-to-gold` och börja MVP v2
+4. Samtidigt som jag grenat ut till 
 
+0. TODO:. `README.md` grundstruktur
 ---
 
 ## Kända begränsningar (dokumenterade)
