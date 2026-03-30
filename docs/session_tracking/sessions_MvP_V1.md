@@ -1,13 +1,13 @@
 # Session tracking notes
 
-**Monday 16/03/2026**
+**Monday 16/03/2026**  
 *Goals for today:*
 - Setup entire repo structure
     - **Done**
 - Add all needed deps for MvP 1
     - **Done**
     
-**Saturday 21/03/2026**
+**Saturday 21/03/2026**  
 *Goals for today:*
 - Write config.py in repo
     - **Done**
@@ -22,7 +22,7 @@
     - **Done**
 
 
-**Sunday 29/03/2026**
+**Sunday 29/03/2026**  
 *Goals for today:*
 - Added visuals in form of .mmd diagrams to show flow with KRaft instead of Zookeeper for kafka
     - **Done**
@@ -51,3 +51,11 @@
 **CI-PIPE**
 - Add more to my github actions CI pipeline before committing `bronze_to_silver.py`-script.
     - **Done**
+
+**Monday 30/03-2026**  
+*Goals for today(birthday, yay!):*
+- Idempotency fix in `bronze_to_silver.py`. Last thing open on ROADMAP.md for MvP V1.
+    - Ongoing
+
+- README.md structure for MvP v1
+    - Ongoing
