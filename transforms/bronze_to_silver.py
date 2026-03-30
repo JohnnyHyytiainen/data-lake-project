@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime, timezone
 from loguru import logger
+import shutil
 
 from config import (
     BRONZE_DIR,
@@ -138,7 +139,7 @@ def run_bronze_to_silver() -> None:
     Read Bronze -> Validate -> Separate valid/invalid ->
     Deduplicate -> Flatten -> Write Silver + DLQ
     """
-    logger.info("Starting Bronze -> Silver Transformatio")
+    logger.info("Starting Bronze -> Silver Transformation")
 
     # Läser HELA bronze layer i en operation.
     # Pandas förstår hive-style partitioning, den hittar alla .parquet filer under BRONZE_DIR
@@ -149,7 +150,7 @@ def run_bronze_to_silver() -> None:
         logger.warning(f"No parquet files found in {BRONZE_DIR}. Nothing to transform")
         return
 
-    logger.info(f"Found{len(bronze_files)} parquet files in Bronze")
+    logger.info(f"Found {len(bronze_files)} parquet files in Bronze")
 
     # Läs alla filer och slå ihop till EN DataFrame
     # Staplar alla "excel ark" på varandra
@@ -184,6 +185,20 @@ def run_bronze_to_silver() -> None:
     df_silver = pd.DataFrame(
         [_flatten(row.to_dict()) for _, row in df_valid.iterrows()]
     )
+
+    # ========== Identifiering av vilka dags partitioner silver output berör ==========
+    # Jag läser created_at från den flattade DataFramen och samlar unika dagar.
+    # Det är DOM och endast DOM jag ska rensa, INGEN annan silver data rörs!
+    partitions_to_clear = set()
+    for _, row in df_silver.iterrows():
+        dt = datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
+        partition = SILVER_DIR / f"year={dt.year}/month={dt.month:02d}/day={dt.day:02d}"
+        partitions_to_clear.add(partition)
+
+    for partition in partitions_to_clear:
+        if partition.exists():
+            shutil.rmtree(partition)
+            logger.info(f"Cleared Silver partition before rewrite: {partition}")
 
     # ========== Skriv till silver ==========
     _write_parquet(df_silver, SILVER_DIR, label="Silver")

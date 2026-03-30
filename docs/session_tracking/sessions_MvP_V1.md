@@ -55,7 +55,8 @@
 **Monday 30/03-2026**  
 *Goals for today(birthday, yay!):*
 - Idempotency fix in `bronze_to_silver.py`. Last thing open on ROADMAP.md for MvP V1.
-    - Ongoing
+    - **Done**
+        - Identified which day partitions the silver output would touch. I read created_at from the flattened DataFrame and collect unique days. **THESE ARE THE ONES AND ONLY THE ONES I CLEAR**. Used `import shitil`and `shutil.rmtree(partition)`to achieve this.
 
 - README.md structure for MvP v1
     - Ongoing

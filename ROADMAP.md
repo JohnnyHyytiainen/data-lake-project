@@ -21,7 +21,7 @@ med CI och tester. Ingen extern databas, all storage är Parquet-filer.
 
 ### Transform (Silver)
 - [x] `transforms/bronze_to_silver.py` - läser Bronze, validerar, deduplicerar på event_id, flattar nästade JSON-fält till Silver-schema
-- [ ] **Idempotens-fix** - rensa Silver-partition innan omskrivning (shutil.rmtree) så att upprepade körningar ej skapar dubletter
+- [x] **Idempotens-fix** - rensa Silver-partition innan omskrivning (shutil.rmtree) så att upprepade körningar ej skapar dubletter
 - [x] `tests/test_transforms.py` - 13/13 unit tests för _is_valid() och _flatten()
 
 ### CI/CD
