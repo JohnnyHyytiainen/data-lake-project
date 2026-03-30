@@ -1,4 +1,5 @@
-# Session tracking notes
+# Session tracking notes for MvP v1
+**COMPLETED**
 
 **Monday 16/03/2026**  
 *Goals for today:*
