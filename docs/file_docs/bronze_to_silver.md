@@ -42,3 +42,57 @@ Silver är där min data slutar vara "data jag fick" och börjar vara "data att 
 2) Det andra är varför jag deduplicerar i Silver och inte i Bronze. I Bronze vill jag ha en exakt avspegling av vad som faktiskt kom in i systemet, dubbletter och allt. Om producern av någon anledning skickade ett event två gånger till Kafka är det ett faktum som ska dokumenteras i Bronze. Silver är däremot platsen där en förbereder data för analys, och i en analys vill du aldrig att samma commit räknas två gånger i ett aktivitetsdiagram.
 
 3) Det tredje är att `_flatten()` är medvetet selektiv. Jag plockar inte ut allt från raw eventet, bara det som faktiskt behövs för att svara på Gold-lagrets frågor. `pr_action` och `pr_merged` är valfria och sätts till None för event-typer där de inte existerar, vilket är fullt acceptabelt i Silver. Gold-lagret filtrerar sedan på event_type för att arbeta med rätt delmängd.
+
+
+## Viktig information att ha med sig.
+
+Efter att ha kört `bootstrap_historical.py` scriptet och hämtat data ifrån Github Archives stötte jag på problem med att få min hämtade data från Bronze -> silver.
+
+- Felet var detta:
+
+```
+$ uv run python -m transforms.bronze_to_silver
+2026-03-31 20:41:59 | INFO | Starting Bronze -> Silver Transformation
+2026-03-31 20:41:59 | INFO | Found 98 parquet files in Bronze
+2026-03-31 20:42:00 | INFO | Loaded 10461 total events from Bronze layer
+2026-03-31 20:42:01 | INFO | Validation complete | valid=10461 invalid=0
+2026-03-31 20:42:01 | INFO | Removed 18 duplicate events
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\johnn\Desktop\projekt\data-lake-project\transforms\bronze_to_silver.py", line 210, in <module>
+    run_bronze_to_silver()
+  File "C:\Users\johnn\Desktop\projekt\data-lake-project\transforms\bronze_to_silver.py", line 186, in run_bronze_to_silver
+    [_flatten(row.to_dict()) for _, row in df_valid.iterrows()]
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "FILEPATH......projekt\data-lake-project\transforms\bronze_to_silver.py", line 100, in _flatten
+    .get("merged", False),
+     ^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+```
+- Lösningen på problemet var denna rad i `bronze_to_silver.py`
+
+Felet:
+```python
+event.get("payload", {}).get("pull_request", {}).get("merged", False)
+```
+Lösningen:
+```python
+"pr_merged": (event.get("payload", {}).get("pull_request") or {}).get("merged", False),
+```
+
+- Anledningen till varför `or {}` löste ett jobbigt problem är detta:
+
+```
+Logiken vid första blick ser korrekt ut. Om pull_request saknas, använd {} som default MEN det finns ett fall jag ej räknade med.
+Github kan skicka "pull_requests": null i sin JSON..
+
+När pandas läser det från .parquet konverteras null till pythons None och None är ej samma sak som {en tom dict}. None är ingenting och ingenting har ingen .get() method.
+
+Skillnaden är som ett öppet men tomt rum, {} är ett tomt rum, jag kan gå in och leta efter saker i rummet iallafall.
+
+None är en stängd dörr och jag kan inte ens gå in i rummet OCH om jag ens försöker så kraschar jag in i den.
+
+Fixen var ett litet 'or {}' som säger att, om resultatet är None, behandla det som en tom dict istället.
+Med 'or {}' skyddar jag mig för just det scenario jag just stötte på. Om .get("pull_request") returnerar None byter jag ut det mot {} innan jag försöker anropa .get("merged", False). Är den metaforiska dörren stängd? Byt ut den mot ett öppet men tomt rum istället och fortsätt.
+```
