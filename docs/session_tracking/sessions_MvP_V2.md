@@ -11,3 +11,13 @@
     - **Done**
 
 
+**Tuesday 31/03-2026**
+*Goals for today:*
+- Write `bootstrap_historical.py` script to start getting historical data as parquet files.
+    - Ongoing
+
+- Write more docs for better understanding of `bootstrap_historical.py` script
+    - Ongoing
+
+- Fetch more historical data.
+    - Ongoing
