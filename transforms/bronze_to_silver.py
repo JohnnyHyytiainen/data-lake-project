@@ -95,9 +95,9 @@ def _flatten(event: dict) -> dict:
         "commit_count": event.get("payload", {}).get("size", 0),
         # PR-status finns bara i PullRequestEvent
         "pr_action": event.get("payload", {}).get("action"),
-        "pr_merged": event.get("payload", {})
-        .get("pull_request", {})
-        .get("merged", False),
+        "pr_merged": (event.get("payload", {}).get("pull_request") or {}).get(
+            "merged", False
+        ),
         "created_at": event["created_at"],
     }
 
