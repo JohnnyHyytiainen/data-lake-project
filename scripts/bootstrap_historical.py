@@ -199,7 +199,7 @@ def run_bootstrap(start: datetime, end: datetime) -> None:
     logger.info(
         f"Bootstrap complete | "
         f"total_events={total_events} | "
-        f"hours_pricessed={total_hours}"
+        f"hours_processed={total_hours}"
     )
 
 
