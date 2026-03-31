@@ -1,8 +1,13 @@
-# data-lake-project
-Personal project - Build my own data lake to further deepen understanding and knowledge about data lakes, data lifecycle and data engineering.
+# GitHub Data Lake (Medallion Architecture)
 
+> **Personal project - Building a scalable data lake to master the data lifecycle, data engineering, and the Medallion architecture.**
 ![Project overview](docs/architecture/overview_data_lake.png)
 
+## Projektets Syfte & Affärsvärde
+För att spåra trender inom Data Engineering-verktyg bygger denna pipeline insikter från GitHubs "brandslang av live-events". Projektet demonstrerar en end-to-end pipeline från rådata (Kafka) till validerad historik (Parquet) och analytiska vyer (dbt/PySpark).
+
+
+## Projektstruktur & MVP Roadmap
 ```text
 github-data-lake/
 │
@@ -81,3 +86,20 @@ github-data-lake/
 ├── pyproject.toml                        # uv hanterar deps
 └── README.md
 ```
+[Mer detaljerad Roadmap](ROADMAP.md)
+
+
+## Tech Stack:
+* **Språk:** Python 3.12 (hanterat via `uv`)
+* **Ingestion:** Apache Kafka (KRaft) & GitHub REST API
+* **Processing & Transformation:** Pandas, PySpark, dbt
+* **Storage:** Lokala Parquet-filer (Hive-partitionering)
+* **DevOps & Kvalitet:** Docker Compose, GitHub Actions (CI), Ruff, Pytest
+
+
+## Quickstart (Kör lokalt)
+1. Klon repot och kopiera `.env.example` till `.env`
+2. Kör `uv sync` för att bygga miljön
+3. Snurra upp Kafka-klustret med `docker compose up -d`
+
+## TODO: Fylla i resten av README.md
