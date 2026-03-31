@@ -44,7 +44,7 @@ Mål: Ersätt Pandas med PySpark för Bronze -> Silver,
 bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 
 ### Bootstrap
-- [ ] `scripts/bootstrap_historical.py` - laddar ner GitHub Archive (.json.gz per timme), packar upp, filtrerar på DE_KEYWORDS, skriver direkt till Bronze. **Kritiskt** för att nå volymer där PySpark är **meningsfullt** och inte "over engineered".
+- [x] `scripts/bootstrap_historical.py` - laddar ner GitHub Archive (.json.gz per timme), packar upp, filtrerar på DE_KEYWORDS, skriver direkt till Bronze. **Kritiskt** för att nå volymer där PySpark är **meningsfullt** och inte "over engineered".
 
 ### Transform (Silver -> PySpark)
 - [ ] Porta `bronze_to_silver.py` från Pandas till PySpark
@@ -78,10 +78,7 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-1. Skriva .mmd kod för att brygga gappet mellan teori och praktik. 
-2. Skriva docs kring `bootstrap_historical.py`
-3. Grena ut till `feat/silver-to-gold` och börja MVP v2
-4. Samtidigt som jag grenat ut till 
+1. Grena ut till `feat/silver-to-gold` och börja MVP v2
 
 0. TODO:. `README.md` grundstruktur
 ---

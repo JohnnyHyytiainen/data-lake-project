@@ -9,7 +9,6 @@ import json
 from datetime import datetime, timedelta, timezone
 import requests
 
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from loguru import logger
@@ -194,7 +193,7 @@ def run_bootstrap(start: datetime, end: datetime) -> None:
             total_events += len(events)
             logger.info(f"  -> {len(events)} relevant events that was found")
         else:
-            logger.info(f"  -> No relevant events in this hour were found")
+            logger.info("  -> No relevant events in this hour were found")
 
     logger.info(
         f"Bootstrap complete | "
