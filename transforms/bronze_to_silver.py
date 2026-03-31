@@ -95,9 +95,9 @@ def _flatten(event: dict) -> dict:
         "commit_count": event.get("payload", {}).get("size", 0),
         # PR-status finns bara i PullRequestEvent
         "pr_action": event.get("payload", {}).get("action"),
-        "pr_merged": event.get("payload", {})
-        .get("pull_request", {})
-        .get("merged", False),
+        "pr_merged": (event.get("payload", {}).get("pull_request") or {}).get(
+            "merged", False
+        ),
         "created_at": event["created_at"],
     }
 
@@ -111,7 +111,7 @@ def _write_parquet(df: pd.DataFrame, output_dir: Path, label: str) -> None:
     same way as Bronze. Consistent structure throughout the lake.
     """
     if df.empty:
-        logger.info(f"No {label} records to write. Skipping..")
+        logger.info(f"No {label} records to write, skipping.")
         return
 
     # Parsa datum från created_at för att bygga korrekt partition
@@ -201,7 +201,11 @@ def run_bronze_to_silver() -> None:
             logger.info(f"Cleared Silver partition before rewrite: {partition}")
 
     # ========== Skriv till silver ==========
-    _write_parquet(df_silver, SILVER_DIR, label="Silver")
+    df_silver["_date"] = pd.to_datetime(df_silver["created_at"]).dt.date
+
+    for date, group in df_silver.groupby("_date"):
+        group = group.drop(columns=["_date"])
+        _write_parquet(group, SILVER_DIR, label="Silver")
     logger.info("Bronze -> Silver transformation completed.")
 
 
