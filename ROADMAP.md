@@ -34,7 +34,7 @@ med CI och tester. Ingen extern databas, all storage är Parquet-filer.
 - [x] `docs/architecture/transforms.mmd` - Silver + Gold i detalj
 - [x] `docs/file_docs/` - egna docs för varje script som fylls i med tiden
 - [x] `docs/visuals/` - egna och enklare visuals för att förstå moduler och flöde
-- [ ] `README.md` - projektbeskrivning, hur man kör lokalt, arkitekturöversikt
+- [/] `README.md` - projektbeskrivning, hur man kör lokalt, arkitekturöversikt
 
 ---
 
@@ -80,14 +80,9 @@ Grafana visualiserar Gold-lagret.
 
 1. Grena ut till `feat/silver-to-gold` och börja MVP v2
 
-0. TODO:. `README.md` grundstruktur
 ---
 
 ## Kända begränsningar (dokumenterade)
 
-GitHub Events API returnerar max 100 events per poll och filtrerar
-hårt på DE_KEYWORDS - volymen är låg på helger. Bootstrap med
-GitHub Archive är den primära lösningen för meningsfulla datamängder.
-
-Silver-lagret är ännu inte idempotent - upprepade körningar
-skapar överlappande Parquet-filer tills idempotens lösningen är på plats.
+GitHub Events API returnerar max 100 events per poll och filtrerar hårt på DE_KEYWORDS - volymen är låg på helger.  
+Bootstrap med Github Archive är den primära lösningen för meningsfulla datamängder.
