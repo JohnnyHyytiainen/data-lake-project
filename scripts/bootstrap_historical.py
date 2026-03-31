@@ -150,7 +150,7 @@ def _write_to_bronze(events: list[dict], timestamp: datetime) -> None:
     # Vart min output path är där filer ska in.
     # Skapa folder om den ej finns.
     output_path = BRONZE_DIR / partition
-    output_path.mkdir(parents=True, exists_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
 
     table = pa.Table.from_pylist(events)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
