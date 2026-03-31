@@ -7,6 +7,7 @@ import gzip
 import io
 import json
 from datetime import datetime, timedelta, timezone
+import requests
 
 import pandas as pd
 import pyarrow as pa
@@ -161,4 +162,110 @@ def _write_to_bronze(events: list[dict], timestamp: datetime) -> None:
 
 # ========== Huvudfunktionen ==========
 def run_bootstrap(start: datetime, end: datetime) -> None:
-    """ """
+    """
+    Run the bootstrap process for a given time interval.
+
+    For each hour between start and end.
+    1. Build GitHub Archive URL
+    2. Downloads and unpack .json.gz into memory(RAM)
+    3. Filters on DE_KEYWORDS and RELEVANT_EVENT_TYPES
+    4. Write relevant events to Bronze as Parquet
+
+    Total events and files are logged at the end as a summary.
+    """
+    urls = _generate_urls(start, end)
+    total_hours = len(urls)
+
+    # loggning
+    logger.info(
+        f"Boostrtap starting ... | from={start.strftime('%Y-&m-%d %H:00')} "
+        f"to={end.strftime('%Y-%m-%d %H:00')} | "
+        f"hours={total_hours}"
+    )
+
+    total_events = 0
+
+    for i, (url, timestamp) in enumerate(urls, start=1):
+        logger.info(f"[{i}/{total_hours}] Fetching {url}")
+        events = _fetch_and_filter(url)
+
+        if events:
+            _write_to_bronze(events, timestamp)
+            total_events += len(events)
+            logger.info(f"  -> {len(events)} relevant events that was found")
+        else:
+            logger.info(f"  -> No relevant events in this hour were found")
+
+    logger.info(
+        f"Bootstrap complete | "
+        f"total_events={total_events} | "
+        f"hours_pricessed={total_hours}"
+    )
+
+
+# ========== Mina CLI commands med argparse ==========
+# Priv funktion FAAFO
+def _parse_args() -> argparse.Namespace:
+    """
+    Configurable CLI with argparse. Three run modes:
+
+    1. Specify exact interval:
+    --start 2024-01-01 --end 2024-01-08
+
+    2. Specify number of days back from today:
+    --days 7
+
+    3. Default if not specified: 7 days back
+    """
+    parser = argparse.ArgumentParser(
+        description="Bootstrap bronze layer from Github Archive historical data.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Download the latest 7 days (default)
+    uv run python -m scripts.bootstrap_historical
+
+    # Download past 30 days
+    uv run python -m scripts.bootstrap_historical --days 30
+
+    # Download between a specific interval
+    uv run python -m scripts.bootstrap_historical --start 2024-03-30 --end 2024-04-20
+        """,
+    )
+
+    parser.add_argument(
+        "--start",
+        type=str,
+        help="Start date (YYYY-MM-DD). Used together with --end.",
+    )
+
+    parser.add_argument(
+        "--end",
+        type=str,
+        help="End date (YYYY-MM-DD). Used together with --start.",
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=7,
+        help="Number of days back from TODAY (default: 7). Ignored IF --start/--end is used.",
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = _parse_args()
+
+    if args.start and args.end:
+        # EXPLICIT INTERVALL
+        start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(
+            tzinfo=timezone.utc
+        )
+        end_dt = datetime.strptime(args.end, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    else:
+        # RELATIV: N dagar bakåt från NU
+        end_dt = datetime.now(timezone.utc)
+        start_dt = end_dt - timedelta(days=args.days)
+
+    run_bootstrap(start_dt, end_dt)
