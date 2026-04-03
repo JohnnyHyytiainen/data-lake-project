@@ -158,3 +158,17 @@ def _write_parquet(df: pd.DataFrame, output_dir: Path, label: str) -> None:
     df.to_parquet(output_file, index=False, compression="snappy")
     logger.info(f"Wrote {len(df)} {label} records -> {output_file}")
 ```
+
+## "Bug" nr 3 - Det är ingen direkt bug, det är mer en huvudvärk.
+
+Den bug jag trodde jag såg i datan ifrån github archives och live data hämtad ifrån githubs API där jag ej kunde se commits var förvirrande. 
+
+`commit_count` är tillförlitlig enbart för live-data där GitHub APIt inkluderar fullständig payload. För Github Archive-data är värdet alltid 0 eftersom Archive strippar commits-listan. Det är tydligen en känd begränsning av datakällan, inte ett pipeline fel..
+
+Githubs `/events-endpoint` returnerar inte alltid fullständig payload för PushEvents. Det beror på repots storlek, antalet commits, och hur Github väljer att komprimera svaret. Vissa PushEvents har size och commits, andra har bara push_id, ref, head och before. Det är APIets beteende, inte en bug i mina script.
+
+Vad jag **Däremot** har spenderat hela kvällen med är detta:
+
+```
+Jag har spenderat tid på att försöka debugga ett fält som mina egentliga gold-layer frågor inte är beroende av alls. Tool_growth räknar stjärnor och forks. Activity_heatmap ska räkna events per timme. Pr_cycle_times mäter tid. INGEN av dom frågar HUR MÅNGA COMMITS EN PUSH INNEHÖLL...
+```

@@ -141,6 +141,16 @@ def _write_to_bronze(events: list[dict], timestamp: datetime) -> None:
     if not events:
         return
 
+    # --- Serialisera Payload till JSON str ---
+    # Samma problem som i consumer.py script, PyArrow infererar schema från HELA batchen
+    # Och skapar issues med nested structures, payload varierar per event type och commits försvinner.
+    serialized_events = []
+    for event in events:
+        event_copy = event.copy()
+        if "payload" in event_copy:
+            event_copy["payload"] = json.dumps(event_copy["payload"])
+        serialized_events.append(event_copy)
+
     partition = DATE_PARTITION_FORMAT.format(
         year=timestamp.year,
         month=timestamp.month,
@@ -151,7 +161,7 @@ def _write_to_bronze(events: list[dict], timestamp: datetime) -> None:
     output_path = BRONZE_DIR / partition
     output_path.mkdir(parents=True, exist_ok=True)
 
-    table = pa.Table.from_pylist(events)
+    table = pa.Table.from_pylist(serialized_events)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     output_file = output_path / f"bootstrap-{ts}.parquet"
 

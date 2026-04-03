@@ -38,7 +38,6 @@ BATCH_TIMEOUT_SEC = 60
 
 
 # --- Parquet skrivning ---
-# Privat funktion. DONT TOUCH!
 def _write_batch_to_bronze(batch: list[dict]) -> None:
     """
     Writes a batch of events to Bronze layer as Parquet.
@@ -65,12 +64,24 @@ def _write_batch_to_bronze(batch: list[dict]) -> None:
                 f"Invalid created_at for event {event.get('id')} using current UTC time"
             )
 
+        # --- Serialisera payload till JSON-sträng ---
+        # PyArrow infererar schema från batchen när den kör from_pylist().
+        # Payload varierar strukturellt per event-typ, en PushEvent har
+        # "commits" som är en lista av objekt, en WatchEvent har det inte alls.
+        # vilket gör att "commits" tyst försvinner från Bronze fil..
+        # Lösning: serialisera payload till en JSON str INNAN PyArrow ens
+        # ser den. En sträng har alltid konsekvent schema  det är bara text.
+        # I _flatten() deserialiserar jag strängen tillbaka med json.loads().
+        event_copy = event.copy()
+        if "payload" in event_copy:
+            event_copy["payload"] = json.dumps(event_copy["payload"])
+
         partition_key = DATE_PARTITION_FORMAT.format(
             year=dt.year,
             month=dt.month,
             day=dt.day,
         )
-        partitions.setdefault(partition_key, []).append(event)
+        partitions.setdefault(partition_key, []).append(event_copy)
 
     # Skriv varje partition till sin egen mapp
     for partition_key, events in partitions.items():
