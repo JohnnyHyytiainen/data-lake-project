@@ -1,6 +1,7 @@
 # Bronze to silver script - För att
 # Kommentarer: Svenska
 # Kod: Engelska
+import json
 import pandas as pd
 from pathlib import Path
 from datetime import datetime, timezone
@@ -85,19 +86,29 @@ def _flatten(event: dict) -> dict:
     .get() with default value protects me from crashing if an
     optional field happens to be missing.
     """
+    # 1) Förbered payload, garantera att det ALLTID är en dict.
+    payload = event.get("payload", {})
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except (json.JSONDecoderError, TypeError):
+            payload = {}
+
+    # 2) Extrahera commit_count. Live API har "size" eller "commits" lista i payload
+    # Github Archive har varken, då är 0 ärligaste svaret... Tyvärr..
+
+    commit_count = payload.get("size") or len(payload.get("commits", [])) or 0
+
+    # 3) returnera det flattend eventet
     return {
         "event_id": event["id"],
         "event_type": event["type"],
         "actor_login": event["actor"].get("login", "unknown"),
         "repo_name": event["repo"].get("name", "unknown"),
         "repo_id": event["repo"].get("id"),
-        # Antal commits finns bara i PushEvent, övriga eventtyper får 0
-        "commit_count": event.get("payload", {}).get("size", 0),
-        # PR-status finns bara i PullRequestEvent
-        "pr_action": event.get("payload", {}).get("action"),
-        "pr_merged": (event.get("payload", {}).get("pull_request") or {}).get(
-            "merged", False
-        ),
+        "commit_count": commit_count,
+        "pr_action": payload.get("action"),
+        "pr_merged": (payload.get("pull_request") or {}).get("merged", False),
         "created_at": event["created_at"],
     }
 
