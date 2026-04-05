@@ -22,7 +22,7 @@
 - Fetch more historical data.
     - **Done**
 
-**Saturday 03/04-2026**
+**Saturday 04/04-2026**
 *Goals for today:*
 - Figure out where the bug is that makes it so I dont get `commit_counts`
     - **Done**
@@ -31,7 +31,7 @@
     - **Done** **Done** **Done** **Done**
     
 
-**Sunday 04/04-2026**
+**Sunday 05/04-2026**
 *Goals for today:*
 - Branch out to `silver_to_gold.py` and write that script to get data into the gold layer for analysis.
     - Ongoing
