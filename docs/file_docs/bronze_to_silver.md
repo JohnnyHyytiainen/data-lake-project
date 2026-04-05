@@ -172,3 +172,30 @@ Vad jag **Däremot** har spenderat hela kvällen med är detta:
 ```
 Jag har spenderat tid på att försöka debugga ett fält som mina egentliga gold-layer frågor inte är beroende av alls. Tool_growth räknar stjärnor och forks. Activity_heatmap ska räkna events per timme. Pr_cycle_times mäter tid. INGEN av dom frågar HUR MÅNGA COMMITS EN PUSH INNEHÖLL...
 ```
+
+
+## Ordningen i hur transformeringen sker i `bronze_to_silver.py`
+I bronze to silver scriptet sker transformeringen i dessa steg:
+1) Valideringen
+2) Deduplicering
+3) flatten
+- Trots att _flatten() funktionen står innan dedupliceringen i scriptet. Anledningen till att ordningen spelar roll är att jag inte vill deduplicera på ett redan "flattat" schema. Jag deduplicerar på det råa `id` fältet ifrån Bronze och de fältet existerar bara innan flatten körs. Efter flatten heter det `event_id` och strukturen är annorlunda.
+
+
+---
+### Vad jag har missat skriva om som är viktigt att förstå.
+
+- Min "idempotens rensning". Innan jag skriver till Silver identifierar jag vilka dag partitioner som berörs av den här körningen och raderar dem med `shutil.rmtree`. Det är det som gör att jag kan köra scriptet hur många gånger jag vill utan att samla på mig dubbletter i Silver. 
+
+- Det här steget är ett viktigt designbeslutet som skiljer en produktionsklar pipeline från en som fungerar bara första gången och är värd att förstå djupare och ett mönster att göra ännu mer research på.
+
+**Gammal och fel ordning**
+- Så, den kompletta ordningen är egentligen fem faser: 
+  - läs Bronze -> validera och separera till DLQ -> deduplicera -> flatten -> rensa berörda Silver-partitions -> skriv ny Silver.
+
+**NY och KORREKT ordning efter research:**
+- Den korrekta ordningen för Pyspark ordningen är egentligen denna:
+  - Läs Bronze med spark.read.parquet() -> validera och separera till DLQ -> deduplicera på raw id-fältet -> flatten -> skriv Silver med mode("overwrite").partitionBy(...). Fem faser blir fyra, och den borttagna fasen är ingen förlust.
+
+**Inför att jag portar över till Pyspark:** 
+Det är den kedjan ovanför jag ska och måste ha i huvudet, för varje fas översätts till PySpark-syntax på lite olika sätt. Läsningen blir spark.read.parquet() istället för pd.concat(). Valideringen och flatten logiken förblir i stort sett identisk fast med PySpark DataFrame API. Och idempotens-rensningen med shutil.rmtree bör förbli oförändrad - det är filsystems operations som inte har med Spark att göra.
