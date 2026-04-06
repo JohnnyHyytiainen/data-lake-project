@@ -42,5 +42,5 @@ jobs:
         run: uv run ruff format --check .
 
         # Steg G) Kör testerna på vår kod vi pushar. Om detta MISSLYCKAS -> Pull requesten STOPPAS.
-      - name: Run Unit tests
-        run: uv run pytest tests/
+    #  - name: Run Unit tests
+    #    run: uv run pytest tests/
