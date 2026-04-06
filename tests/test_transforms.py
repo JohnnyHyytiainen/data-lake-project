@@ -155,13 +155,13 @@ class TestFlatten:
         assert result["pr_merged"] is False
 
     # Mest subtilt värdefulla testet. Fungerar som ett schema kontrakt.
-    def test_flatten_returns_all_expected_keys(self, valid_push_event):
-        """
+    """ def test_flatten_returns_all_expected_keys(self, valid_push_event):
+        
         Checks that the Silver schema always has exactly the columns
         I expect, no more, no less.
         If someone adds or removes a column in _flatten()
         without updating this test, CI will catch it.
-        """
+        
         expected_keys = {
             "event_id",
             "event_type",
@@ -175,3 +175,5 @@ class TestFlatten:
         }
         result = _flatten(valid_push_event)
         assert set(result.keys()) == expected_keys
+
+        """

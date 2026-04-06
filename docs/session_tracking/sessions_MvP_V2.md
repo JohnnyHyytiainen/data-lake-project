@@ -31,14 +31,18 @@
     - **Done** **Done** **Done** **Done**
     
 
+
 **Sunday 05/04-2026**
+*Goals for today:*
+- Port over to PySpark from Pandas and read up on docs
+    - **Done**
+
+
+**Monday/Tuesday 06/04-2026 + 07/04-2026**
 *Goals for today:*
 - Branch out to `silver_to_gold.py` and write that script to get data into the gold layer for analysis.
     - Ongoing
-
-- Port over to PySpark from Pandas and read up on docs
-    - Ongoing
-
+    
 - Write `silver_to_gold.py` docs to better understand PySparks strenghts and weaknesses compared to Pandas
     - Ongoing
 

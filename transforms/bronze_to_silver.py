@@ -1,12 +1,26 @@
 # Bronze to silver script - För att
 # Kommentarer: Svenska
 # Kod: Engelska
-import json
-import pandas as pd
+import sys
+import os
 from pathlib import Path
-from datetime import datetime, timezone
 from loguru import logger
 import shutil
+
+# NYTT: PySpark imports
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import (
+    BooleanType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+)
+
+os.environ.setdefault("HADOOP_HOME", r"C:/Program Files/hadoop")
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 from config import (
     BRONZE_DIR,
@@ -30,196 +44,120 @@ logger.add(
 DLQ_DIR = Path("data/dlq/events")
 
 
-# ========== VALIDERING ==========
-# Dessa fält MÅSTE finnas för att event ska vara användbart i analys. Saknas något vet jag inte vad eventet är,
-# vem som skapade det, vilket repo det tillhör eller när fan det hände. Utan det här är eventet värdelöst i gold layer.
-REQUIRED_FIELDS = {"id", "type", "actor", "repo", "created_at"}
-
-
-# Priv funktion, fuck around 'n' find out.
-def _is_valid(event: dict) -> bool:
-    """
-    Checks that an event meets the minimum requirements for the Silver layer.
-
-    I check three things in order:
-    1. That all required fields are present
-    2. That the event type is one I recognize
-    3. That created_at can actually be parsed as a date
-
-    If any of these fail, the event belongs in DLQ, not Silver.
-    """
-    # Kontroll 1: Obligatoriska fält:
-    if not REQUIRED_FIELDS.issubset(event.keys()):
-        return False
-    # Kontroll 2: Känd event type
-    if event["type"] not in RELEVANT_EVENT_TYPES:
-        return False
-
-    # Kontroll 3: giltig timestamp
-    try:
-        datetime.fromisoformat(event["created_at"].replace("Z", "+00:00"))
-    except (ValueError, AttributeError):
-        return False
-
-    return True
-
-
-# ========== Flattenning ==========
-# Priv funktion, FAAFO
-def _flatten(event: dict) -> dict:
-    """
-    Flatten a raw event from its nested JSON structure into
-    flat columns that PySpark and dbt can work with directly.
-
-    The raw event looks something like this:
-    {
-    "id": "12345",
-    "type": "PushEvent",
-    "actor": {"login": "johnnyhyy", "id": 99},
-    "repo": {"name": "apache/airflow", "id": 42},
-    "payload": {"size": 3, "commits": [...]},
-    "created_at": "2026-03-29T16:00:00Z"
-    }
-
-    I don't care about everything, I pick out what is actually
-    relevant to my Gold questions and give the fields clear names.
-    .get() with default value protects me from crashing if an
-    optional field happens to be missing.
-    """
-    # 1) Förbered payload, garantera att det ALLTID är en dict.
-    payload = event.get("payload", {})
-    if isinstance(payload, str):
-        try:
-            payload = json.loads(payload)
-        except (json.JSONDecoderError, TypeError):
-            payload = {}
-
-    # 2) Extrahera commit_count. Live API har "size" eller "commits" lista i payload
-    # Github Archive har varken, då är 0 ärligaste svaret... Tyvärr..
-
-    commit_count = payload.get("size") or len(payload.get("commits", [])) or 0
-
-    # 3) returnera det flattend eventet
-    return {
-        "event_id": event["id"],
-        "event_type": event["type"],
-        "actor_login": event["actor"].get("login", "unknown"),
-        "repo_name": event["repo"].get("name", "unknown"),
-        "repo_id": event["repo"].get("id"),
-        "commit_count": commit_count,
-        "pr_action": payload.get("action"),
-        "pr_merged": (payload.get("pull_request") or {}).get("merged", False),
-        "created_at": event["created_at"],
-    }
-
-
-# ========== Skriv .parquet ==========
-# Priv funktion, FAAFO
-def _write_parquet(df: pd.DataFrame, output_dir: Path, label: str) -> None:
-    """
-    Writes a DataFrame to Parquet with same Hive-style partitioning
-    that Brone layer uses. This way Pyspark can read Silver in the exact
-    same way as Bronze. Consistent structure throughout the lake.
-    """
-    if df.empty:
-        logger.info(f"No {label} records to write, skipping.")
-        return
-
-    # Parsa datum från created_at för att bygga korrekt partition
-    # Använder första radens datum som representant för hela batchen
-    sample_dt = datetime.fromisoformat(df["created_at"].iloc[0].replace("Z", "+00:00"))
-    partition = (
-        f"year={sample_dt.year}/month={sample_dt.month:02d}/day={sample_dt.day:02d}"
-    )
-    output_path = output_dir / partition
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    output_file = output_path / f"part-{timestamp}.parquet"
-
-    df.to_parquet(output_file, index=False, compression="snappy")
-    logger.info(f"Wrote {len(df)} {label} records -> {output_file}")
+# ========== Silver Schema ==========
+# I PySpark definierar jag ett explicit schema.
+# PySpark ska inte gissa med vad silver columns ska heta eller ha för typ. Det är mitt kontrakt
+# Mot gold layer och det SKA hållas explicit och stabilt.
+SILVER_SCHEMA = StructType(
+    [
+        StructField("event_id", StringType(), nullable=False),
+        StructField("event_type", StringType(), nullable=False),
+        StructField("actor_login", StringType(), nullable=True),
+        StructField("repo_name", StringType(), nullable=True),
+        StructField("repo_id", StringType(), nullable=True),
+        StructField("commit_count", IntegerType(), nullable=True),
+        StructField("pr_action", StringType(), nullable=True),
+        StructField("pr_merged", BooleanType(), nullable=True),
+        StructField("created_at", StringType(), nullable=False),
+    ]
+)
 
 
 # ========== Huvudfunktion ==========
 def run_bronze_to_silver() -> None:
     """
-    Reads all Parquet files from Bronze, transforms them to Silver.
+    Reads Bronze-layer with PySpark, transforms to Silver-layer.
 
     Flow:
-    Read Bronze -> Validate -> Separate valid/invalid ->
-    Deduplicate -> Flatten -> Write Silver + DLQ
+    Read Parquet -> Filter event-types -> Deduplicate ->
+    Flatten via native Spark -> Clear silver partitions -> Write Silver
     """
-    logger.info("Starting Bronze -> Silver Transformation")
+    spark = (
+        SparkSession.builder.master("local[*]")
+        .appName("github-data-lake-bronze-to-silver")
+        # Talar om för Spark att skriva Parquet med Hive-style partitionering
+        .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
+        .getOrCreate()
+    )
+    # Sätter log nivå till ERROR så Spark inte ska spamma terminalen med WARN
+    spark.sparkContext.setLogLevel("ERROR")
+
+    logger.info("Starting Bronze -> Silver transformation (PySpark)")
 
     # Läser HELA bronze layer i en operation.
-    # Pandas förstår hive-style partitioning, den hittar alla .parquet filer under BRONZE_DIR
-    # oavsett hur djupt dom ligger
-    bronze_files = list(BRONZE_DIR.rglob("*.parquet"))
+    df_bronze = spark.read.parquet(str(BRONZE_DIR))
+    total = df_bronze.count()
+    logger.info(f"Loaded: {total} total events from Bronze Layer")
 
-    if not bronze_files:
-        logger.warning(f"No parquet files found in {BRONZE_DIR}. Nothing to transform")
-        return
+    # ========== Filtrera på kända event typer ==========
+    df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
+    logger.info(f"After event-type filter: {df_filtered.count()} events")
 
-    logger.info(f"Found {len(bronze_files)} parquet files in Bronze")
+    # ========== Deduplicering ==========
+    df_deduped = df_filtered.dropDuplicates(["id"])
+    dupes = df_filtered.count() - df_deduped.count()
+    if dupes > 0:
+        logger.info(f"Removed {dupes} duplicate events")
 
-    # Läs alla filer och slå ihop till EN DataFrame
-    # Staplar alla "excel ark" på varandra
-    df_raw = pd.concat([pd.read_parquet(f) for f in bronze_files], ignore_index=True)
-    logger.info(f"Loaded {len(df_raw)} total events from Bronze layer")
-
-    # ========== VALIDERING: Separera valid från oväntad data ==========
-    valid_mask = df_raw.apply(lambda row: _is_valid(row.to_dict()), axis=1)
-    df_valid = df_raw[valid_mask].copy()
-    df_invalid = df_raw[~valid_mask].copy()
-
-    logger.info(
-        f"Validation complete | valid={len(df_valid)} invalid={len(df_invalid)}"
+    # ========== Flattening med inbyggda Spark-funktioner ==========
+    # Jag skippar UDFen helt! get_json_object extraherar data direkt i JVM-motorn.
+    df_silver = df_deduped.select(
+        F.col("id").cast("string").alias("event_id"),
+        F.col("type").cast("string").alias("event_type"),
+        # 1) actor och repo sparades som 'Structs' (nästlade objekt) i Parquet.
+        # Därför kan jag använda punkt notation direkt! Inget behov av json-funktioner.
+        F.col("actor.login").cast("string").alias("actor_login"),
+        F.col("repo.name").cast("string").alias("repo_name"),
+        F.col("repo.id").cast("string").alias("repo_id"),
+        # 2) payload sparades som en raw textsträng i Bronze.
+        # Jag behåller därför get_json_object här för att gräva i str
+        # Använd coalesce för att fylla på med 0 om "size" saknas
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
+        ).alias("commit_count"),
+        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
+        # Coalesce för att ge default False om "merged" saknas
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
+                "boolean"
+            ),
+            F.lit(False),
+        ).alias("pr_merged"),
+        F.col("created_at").cast("string"),
     )
 
-    # Skriv ogiltiga events till DLQ - Bronze layer rörs aldrig!
-    if not df_invalid.empty:
-        _write_parquet(df_invalid, DLQ_DIR, label="DLQ")
+    # Trigga cache för att tvinga fram beräkningen
+    df_silver.cache()
+    silver_count = df_silver.count()
+    logger.info(f"Flattened {silver_count} events to Silver schema")
 
-    # ========= Deduplicering ==========
-    # Github events API returnerar samma events i flera poll cykler
-    # Jag behåller första förekomsten av varje event_id
-    before_dedup = len(df_valid)
-    df_valid = df_valid.drop_duplicates(subset=["id"], keep="first")
-    dupes_removed = before_dedup - len(df_valid)
+    # ========== Rensar berörda silver partitions ==========
+    # ==========        (Idempotens)              ==========
+    dates = df_silver.select(F.to_date("created_at").alias("date")).distinct().collect()
 
-    if dupes_removed > 0:
-        logger.info(f"Removed {dupes_removed} duplicate events")
-
-    # ========== FLATTENNING ==========
-    # Konverterar varje rad från nested dicts till platta columns
-    df_silver = pd.DataFrame(
-        [_flatten(row.to_dict()) for _, row in df_valid.iterrows()]
-    )
-
-    # ========== Identifiering av vilka dags partitioner silver output berör ==========
-    # Jag läser created_at från den flattade DataFramen och samlar unika dagar.
-    # Det är DOM och endast DOM jag ska rensa, INGEN annan silver data rörs!
-    partitions_to_clear = set()
-    for _, row in df_silver.iterrows():
-        dt = datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
+    for row in dates:
+        dt = row["date"]
         partition = SILVER_DIR / f"year={dt.year}/month={dt.month:02d}/day={dt.day:02d}"
-        partitions_to_clear.add(partition)
-
-    for partition in partitions_to_clear:
         if partition.exists():
             shutil.rmtree(partition)
-            logger.info(f"Cleared Silver partition before rewrite: {partition}")
+            logger.info(f"Cleared Silver partition: {partition}")
 
-    # ========== Skriv till silver ==========
-    df_silver["_date"] = pd.to_datetime(df_silver["created_at"]).dt.date
+    # ========== Skriva till silver ==========
+    (
+        df_silver.withColumn("year", F.year(F.to_timestamp("created_at")))
+        # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
+        .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
+        .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
+        .write.mode("overwrite")
+        .partitionBy("year", "month", "day")
+        .parquet(str(SILVER_DIR))
+    )
 
-    for date, group in df_silver.groupby("_date"):
-        group = group.drop(columns=["_date"])
-        _write_parquet(group, SILVER_DIR, label="Silver")
-    logger.info("Bronze -> Silver transformation completed.")
+    logger.info(f"Wrote {silver_count} Silver records -> {SILVER_DIR}")
+    logger.info("Bronze -> Silver transformation complete")
+
+    spark.stop()
 
 
-# ===== Entrypoint =====
 if __name__ == "__main__":
     run_bronze_to_silver()
