@@ -65,60 +65,6 @@ SILVER_SCHEMA = StructType(
 )
 
 
-# ========== Flattening som UDF(user defined functions) ==========
-# Med Pyspark använder jag en UDF som Spark anropar parallellt på varje rad i sina distribuerade partitions.
-# UDF är som en bro mellan python kod och sparks exekvering.
-def _flatten_event(event_id, event_type, actor, repo, payload, created_at):
-    """
-    Extracts and flattens field from raw event to silver schema.
-    Bulletproof version: Will return a safe error row instead of crashing Spark.
-    """
-    try:
-        actor_dict = json.loads(actor) if isinstance(actor, str) else (actor or {})
-        repo_dict = json.loads(repo) if isinstance(repo, str) else (repo or {})
-        payload_dict = (
-            json.loads(payload) if isinstance(payload, str) else (payload or {})
-        )
-
-        # Tvinga dem att vara dicts, utifall GitHub skickar en int eller lista av misstag
-        if not isinstance(actor_dict, dict):
-            actor_dict = {}
-        if not isinstance(repo_dict, dict):
-            repo_dict = {}
-        if not isinstance(payload_dict, dict):
-            payload_dict = {}
-
-        pr = payload_dict.get("pull_request") or {}
-        if not isinstance(pr, dict):
-            pr = {}
-
-        return (
-            str(event_id) if event_id is not None else "unknown",
-            str(event_type) if event_type is not None else "unknown",
-            str(actor_dict.get("login") or "unknown"),
-            str(repo_dict.get("name") or "unknown"),
-            str(repo_dict.get("id") or ""),
-            int(payload_dict.get("size") or 0),  # 'or 0' skyddar mot att size är None
-            str(payload_dict.get("action") or ""),
-            bool(pr.get("merged") or False),
-            str(created_at) if created_at is not None else "unknown",
-        )
-    except Exception as e:
-        # AIRBAG: Om koden ovan kraschar, dö inte!
-        # Returnera detta istället, så kan jag se EXAKT vad som gick fel i dataframe sen.
-        return (
-            str(event_id) if event_id is not None else "error_id",
-            "UDF_CRASH",
-            "error",
-            "error",
-            str(e),  # sparar felmeddelandet i repo_id-kolumnen för debugging!
-            0,
-            "error",
-            False,
-            str(created_at) if created_at is not None else "unknown",
-        )
-
-
 # ========== Huvudfunktion ==========
 def run_bronze_to_silver() -> None:
     """
@@ -126,7 +72,7 @@ def run_bronze_to_silver() -> None:
 
     Flow:
     Read Parquet -> Filter event-types -> Deduplicate ->
-    Flatten via UDF -> Clear silver partitions -> Write Silver
+    Flatten via native Spark -> Clear silver partitions -> Write Silver
     """
     spark = (
         SparkSession.builder.master("local[*]")
@@ -141,66 +87,49 @@ def run_bronze_to_silver() -> None:
     logger.info("Starting Bronze -> Silver transformation (PySpark)")
 
     # Läser HELA bronze layer i en operation.
-    # Pyspark förstår hive-style partitioning, den hittar alla .parquet filer under BRONZE_DIR
-    # som Pandas gjorde också oavsett hur djupt dom ligger
     df_bronze = spark.read.parquet(str(BRONZE_DIR))
     total = df_bronze.count()
-    # Loggning som ovan
     logger.info(f"Loaded: {total} total events from Bronze Layer")
 
     # ========== Filtrera på kända event typer ==========
-    # Sparks isin() är likadant som Pandas isin() dvs - Filtrerar på en lista
     df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
     logger.info(f"After event-type filter: {df_filtered.count()} events")
+
     # ========== Deduplicering ==========
-    # dropDuplicates() är Sparks version av Pandas drop_duplicates()
     df_deduped = df_filtered.dropDuplicates(["id"])
     dupes = df_filtered.count() - df_deduped.count()
     if dupes > 0:
         logger.info(f"Removed {dupes} duplicate events")
 
-    # ========== Registrera UDF(User Defined Functions) ==========
-    # Berättar för Spark vad UDF ska returnera för typ, en struct
-    # Som matchar silver schema. Utan det här vet inte spark hur den
-    # Ska hantera return values från python funktionen
-    from pyspark.sql.types import (
-        StructType,
-        StructField,
-        StringType,
-        IntegerType,
-        BooleanType,
+    # ========== Flattening med inbyggda Spark-funktioner ==========
+    # Jag skippar UDFen helt! get_json_object extraherar data direkt i JVM-motorn.
+    df_silver = df_deduped.select(
+        F.col("id").cast("string").alias("event_id"),
+        F.col("type").cast("string").alias("event_type"),
+        # 1) actor och repo sparades som 'Structs' (nästlade objekt) i Parquet.
+        # Därför kan jag använda punkt notation direkt! Inget behov av json-funktioner.
+        F.col("actor.login").cast("string").alias("actor_login"),
+        F.col("repo.name").cast("string").alias("repo_name"),
+        F.col("repo.id").cast("string").alias("repo_id"),
+        # 2) payload sparades som en raw textsträng i Bronze.
+        # Jag behåller därför get_json_object här för att gräva i str
+        # Använd coalesce för att fylla på med 0 om "size" saknas
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
+        ).alias("commit_count"),
+        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
+        # Coalesce för att ge default False om "merged" saknas
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
+                "boolean"
+            ),
+            F.lit(False),
+        ).alias("pr_merged"),
+        F.col("created_at").cast("string"),
     )
 
-    udf_return_type = StructType(
-        [
-            StructField("event_id", StringType()),
-            StructField("event_type", StringType()),
-            StructField("actor_login", StringType()),
-            StructField("repo_name", StringType()),
-            StructField("repo_id", StringType()),
-            StructField("commit_count", IntegerType()),
-            StructField("pr_action", StringType()),
-            StructField("pr_merged", BooleanType()),
-            StructField("created_at", StringType()),
-        ]
-    )
-
-    flatten_udf = F.udf(_flatten_event, udf_return_type)
-
-    # Applicera UDF, resultatet är en column med struct-values
-    # Jag expanderar structen till separata columns med col("flat.*")
-    df_silver = df_deduped.withColumn(
-        "flat",
-        flatten_udf(
-            F.col("id"),
-            F.col("type"),
-            F.col("actor").cast("string"),
-            F.col("repo").cast("string"),
-            F.col("payload").cast("string"),
-            F.col("created_at"),
-        ),
-    ).select("flat.*")
-
+    # Trigga cache för att tvinga fram beräkningen
+    df_silver.cache()
     silver_count = df_silver.count()
     logger.info(f"Flattened {silver_count} events to Silver schema")
 
@@ -216,12 +145,11 @@ def run_bronze_to_silver() -> None:
             logger.info(f"Cleared Silver partition: {partition}")
 
     # ========== Skriva till silver ==========
-    # partitionBy() skriver automatiskt till year=/month=/day=/ mapparna
-    # baserat på created_at-kolumnen, behöver inte bygga sökvägarna manuellt thank god.
     (
         df_silver.withColumn("year", F.year(F.to_timestamp("created_at")))
-        .withColumn("month", F.month(F.to_timestamp("created_at")))
-        .withColumn("day", F.dayofmonth(F.to_timestamp("created_at")))
+        # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
+        .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
+        .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
         .write.mode("overwrite")
         .partitionBy("year", "month", "day")
         .parquet(str(SILVER_DIR))
