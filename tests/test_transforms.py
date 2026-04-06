@@ -2,13 +2,14 @@
 # Kommentarer: Svenska
 # Kod: Engelska
 import pytest
+from transforms.bronze_to_silver import _is_valid, _flatten
 
 # ========== Fixtures: Återanvändbar testdata ==========
 # En pytest fixture producerar testdata på begäran. Istället för att skriva samma dict om och om igen i varje test
 # Så definierar jag den EN gång här och injicerar den i testerna som behöver den.
 # DRY princip tillämpad på tester.
 
-` """
+
 @pytest.fixture
 def valid_push_event():
     """A complete, well-formatted PushEvent - Golden path"""
@@ -176,4 +177,3 @@ class TestFlatten:
         assert set(result.keys()) == expected_keys
 
         """
-```
