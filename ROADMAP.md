@@ -47,7 +47,7 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 - [x] `scripts/bootstrap_historical.py` - laddar ner GitHub Archive (.json.gz per timme), packar upp, filtrerar på DE_KEYWORDS, skriver direkt till Bronze. **Kritiskt** för att nå volymer där PySpark är **meningsfullt** och inte "over engineered".
 
 ### Transform (Silver -> PySpark)
-- [ ] Porta `bronze_to_silver.py` från Pandas till PySpark
+- [x] Porta `bronze_to_silver.py` från Pandas till PySpark
 - [ ] Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 
 ### Transform (Gold)
