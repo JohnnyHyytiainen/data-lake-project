@@ -3,7 +3,7 @@
 **Datasource:** GitHub Events API (github.com/timeline)  
 **Arkitektur:** Medallion (Bronze / Silver / Gold)  
 **Stack:** Kafka (KRaft) · Pandas -> PySpark -> dbt -> Airflow -> Grafana  
-**Portfolio-syfte:** Visa och träna DE-kompetens inför LIA @ CGI Jan 2027(HOPEFULLY)
+**Portfolio-syfte:** Visa och träna DE-kompetens inför LIA 2027
 
 ---
 
