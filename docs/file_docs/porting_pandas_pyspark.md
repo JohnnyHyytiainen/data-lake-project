@@ -1,38 +1,48 @@
 # Own docs regarding porting over from Pandas to Pyspark.
+---
 
-## TODO: Update docs, re-write it clean, its kind of double now.
+## Arkitekturbeslut & Insikter: Portning från Pandas till PySpark
 
-I pandas infererade(beräknade schema automatiskt) jag schema automatiskt och med PySpark definierar jag det EXPLICIT.
-Det är med flit och ett designbeslut. Jag vill inte att PySpark ska gissa vad mina silver columns ska heta eller ha för data typ. Det är mitt kontrakt mot golden layer och det ska vara explicit och hållas stabilt.
+Detta dokument sammanfattar de viktigaste konceptuella och tekniska skillnaderna vid migrering av transformationer i Silver-lagret från Pandas till distribuerad PySpark.
 
-Med/I Pandas anropade jag _flatten() med iterrows(), rad för rad i Python. I PySpark använder man en UDF (User Defined Function) som Spark anropar parallellt på varje rad i sina distribuerade partitioner. En UDF är en bro mellan Python kod och Sparks exekveringsmotor.
+## 1. Minneshantering och Exekvering (Eager vs. Lazy)
 
-**Notera:** UDFs är långsammare än inbyggda Spark-funktioner eftersom data måste serialiseras mellan JVM och Python. Men för komplex nested JSON-logik är de det enklaste och tydligaste alternativet enligt den teori jag läst.
+* **Pandas (Eager Evaluation):** Läser in all data i minnet (RAM) på en gång och bearbetar den sekventiellt som en enda tabell. Fungerar utmärkt för 58 000 rader, men leder ofrånkomligen till "Out of Memory" (OOM)-krascher vid skalan av 58 miljoner rader. Transformationer sker *direkt* när koden körs.
 
+* **PySpark (Lazy Evaluation):** Arbetar distribuerat. Istället för att ladda all data i minnet bygger Spark en exekveringsplan (ett logiskt träd av transformationer). Koden exekveras först när en "Action" anropas (t.ex `.write`, `.count()`, `.collect()`)
 
-### Det viktigaste att förstå rent konceptuellt:
+    * *Konceptuell liknelse:* Pandas lagar maten direkt så fort du säger ett steg. Spark skriver ner hela receptet, optimerar ordningen, och lagar maten först när tallriken faktiskt behövs.
 
-Den viktigaste konceptuella skillnaden att ta med sig härifrån är hur flattenning hanteras nu med PySpark. I Pandas versionen itererade jag rad för rad med iterrows(), en Python for loop som körs sekventiellt. Nu i PySpark versionen registreras en UDF som Spark anropar parallellt på alla rader samtidigt, fördelat över dina(datorns) CPU kärnor. Det ska vara här som PySpark börjar visa sitt värde när datamängderna växer och Pandas ger dig OOM issues.
+    * *Parallellism:* Lokalt med `local[*]` delar Spark upp datan i partitioner och bearbetar dem parallellt över alla datorns tillgängliga CPU-kärnor.
 
-**Viktigt att veta OM jag undrar VARFÖR det går mycket långsammare än Pandas**
-- Spark har en overhead när det kommer till uppstart, den saknar Pandas. MEN när min datamängd växer(Endast månad 03 och några dagar in på månad 04 vid skrivande tillfälle) så kommer jag märka skillnaden och se styrkan med PySpark Vs Pandas.
+## 2. Scheman: Från gissningar till stenhårda kontrakt
 
+* **Pandas:** Infererar (beräknar/gissar) scheman och datatyper automatiskt. Smidigt vid prototyper, men farligt i produktion då felaktig data kan tyst smyga sig in och krascha nedströms-system.
 
-# Own notes written in different document thats removed. 
+* **PySpark:** Här definierar jag schemat **explicit** via `StructType` och `StructField`.
+    * *Designbeslut:* Detta är medvetet. Jag vill inte att Spark ska gissa. Detta explicita schema fungerar som ett strikt kontrakt mellan Bronze och Gold. Det garanterar datakvalitet och stabilitet.
 
-Pandas läser all data in i minnet på en gång och jobbar med den som en enda tabell. Det fungerar utmärkt för 58 000 records, men om en hade haft t.ex 58 miljoner records skulle ens dator gå på sina knän. PySpark tänker istället i termer av distribuerade operationer, den delar upp data i partitioner och bearbetar dem parallellt, potentiellt på hundratals maskiner. 
+## 3. Datautvinning: Iterrows -> UDF -> Spark Native
+Att platta ut (flatten) nästlad JSON-data var den största arkitektoniska förändringen.
 
-Just nu lokalt på min dator kör den fortfarande parallellt fast på mina CPU-cores istället. Det är därför `local[*]` i min SparkSession betyder "använd alla tillgängliga kärnor"
+* **Nivå 1: Pandas `iterrows()`:** En Python `for-loop` som körs sekventiellt rad för rad. Extremt ineffektivt för stora datamängder.
 
-Den praktiska konsekvensen för mig är att PySpark aldrig läser hela datasetet in i minnet på en gång. När jag skriver en transformation beskriver du vad som ska hända, inte hur det ska exekveras. Spark bygger upp en exekveringsplan och kör allting när jag faktiskt behöver resultatet, det är detta som kallas för `lazy evaluation`. Det är som att skriva ett recept kontra att faktiskt laga maten. Pandas lagar maten direkt(`Eager evaluation`). Spark skriver receptet och lagar det sedan optimalt när tallriken behövs.
+* **Nivå 2: PySpark UDF (User Defined Function):** Ett sätt att köra anpassad Python-kod på Spark-partitioner. 
+    * *Prestandafällan:* Spark körs i en JVM (Java Virtual Machine). Om jag använder en Python-UDF måste all data serialiseras från JVM till Python, bearbetas, och sedan serialiseras tillbaka. Det är som att skicka ett paket från Sverige till USA för att öppna det, och sedan skicka tillbaka innehållet. Det skapar en massiv overhead.
 
-Den viktigaste konceptuella skillnaden att ta med sig härifrån är hur flattenning hanteras. I min Pandas version itererade jag rad för rad med `iterrows()` en Python `for loop` som körs sekventiellt. I PySpark versionen registrerar jag en UDF som Spark anropar parallellt på alla rader samtidigt, fördelat över mina CPU-cores. Det är egentligen här som PySpark börjar visa sitt värde när datamängderna växer.
+* **Nivå 3: Spark Native (`get_json_object`):** Den optimala lösningen.
 
-En UDF i PySpark innebär att data måste serialiseras från JVM (där Spark lever) till Python för att sedan bearbetas i Python, och sedan serialiseras tillbaka till JVM. Det är som att skicka ett paket från Sverige till USA för att öppna det och sedan skicka tillbaka innehållet, onödigt dyrt och onödigt tidskrävande. `get_json_object` däremot körs direkt i JVM utan att lämna Spark motorn. Det är snabbare, mer minneseffektivt, och skalbart på ett sätt som UDFer inte är.
+    * *Varför det är bäst:* Inbyggda Spark-funktioner körs direkt i JVM (ofta optimerade i Sparks *Tungsten*-motor) i C/Java-hastighet. Datat lämnar aldrig motorn. `get_json_object` låter mig extrahera specifika fält direkt ur en rå JSON-sträng utan att behöva deserialisera hela objektet först. Det är snabbt och extremt minneseffektivt.
 
-`zero padding` problemet kringgick jag med `date_format("MM")` och `date_format("dd")` det är en liten men kritisk detalj för att min Hive-partitionering ska fungera konsekvent. month=3 och month=03 är två olika mappar för ett filsystem men ska vara samma partition logiskt sett.
+## 4. Hive-Partitionering och vikten av "Zero Padding"
+I slutet av pipelinen skrivs datan till Parquet-filer partitionerade efter år, månad och dag (`year=YYYY/month=MM/day=DD`).
 
+* **Problemet:** Utan formatering skapas mappar som `month=3` och `month=10`. För filsystem är det bara textsträngar. När frågemotorer (som DuckDB, AWS Athena eller dbt) läser dessa uppstår problem med *lexikografisk sortering*. Filsystemet kommer sortera filerna som `1, 10, 11, 2, 3`, vilket förstör kronologin vid läsning och optimering.
 
-----
-**TODO:** 
-- Lös på mer om zero padding och get_json_object ännu mer.
+* **Lösningen (Zero Padding):** Genom att tvinga fram inledande nollor med `date_format(col, "MM")` och `"dd"` skapas partitioner som `month=03`. Sorteringen blir då korrekt: `01, 02, 03... 10, 11`. Detta är en liten men affärskritisk detalj för att downstream-verktyg ska kunna göra snabba "partition pruning"-sökningar.
+
+---
+**Slutsats / Overhead-notering:**
+Spark har en oundviklig uppstartstid (overhead) för att spinna upp JVM och exekveringsplanen. För små filer kan Pandas verka snabbare lokalt, men när datamängderna skalar upp är det PySparks distribuerade, lazy evaluerade arkitektur som förhindrar systemkrascher.
+
+***
