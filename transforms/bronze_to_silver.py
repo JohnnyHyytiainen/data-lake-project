@@ -44,25 +44,6 @@ logger.add(
 DLQ_DIR = Path("data/dlq/events")
 
 
-# ========== Silver Schema ==========
-# I PySpark definierar jag ett explicit schema.
-# PySpark ska inte gissa med vad silver columns ska heta eller ha för typ. Det är mitt kontrakt
-# Mot gold layer och det SKA hållas explicit och stabilt.
-SILVER_SCHEMA = StructType(
-    [
-        StructField("event_id", StringType(), nullable=False),
-        StructField("event_type", StringType(), nullable=False),
-        StructField("actor_login", StringType(), nullable=True),
-        StructField("repo_name", StringType(), nullable=True),
-        StructField("repo_id", StringType(), nullable=True),
-        StructField("commit_count", IntegerType(), nullable=True),
-        StructField("pr_action", StringType(), nullable=True),
-        StructField("pr_merged", BooleanType(), nullable=True),
-        StructField("created_at", StringType(), nullable=False),
-    ]
-)
-
-
 # ========== Huvudfunktion ==========
 def run_bronze_to_silver() -> None:
     """
@@ -115,6 +96,9 @@ def run_bronze_to_silver() -> None:
         F.coalesce(
             F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
         ).alias("commit_count"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.number").cast("integer"), F.lit(0)
+        ).alias("pr_number"),  # <--- NY
         F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
         # Coalesce för att ge default False om "merged" saknas
         F.coalesce(
