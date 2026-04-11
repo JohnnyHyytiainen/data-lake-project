@@ -51,7 +51,7 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 - [ ] Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 
 ### Transform (Gold)
-- [ ] `transforms/silver_to_gold.py` - PySpark aggregeringar
+- [x] `transforms/silver_to_gold.py` - PySpark aggregeringar
 - [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
 - [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
 - [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
@@ -78,7 +78,7 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-1. Grena ut till `feat/silver-to-gold` och börja MVP v2
+1. Grena ut till `feat/silver-to-gold` och börja MVP v2 **Done**
 
 ---
 
