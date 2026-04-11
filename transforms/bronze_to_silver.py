@@ -97,8 +97,11 @@ def run_bronze_to_silver() -> None:
             F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
         ).alias("commit_count"),
         F.coalesce(
-            F.get_json_object(F.col("payload"), "$.number").cast("integer"), F.lit(0)
-        ).alias("pr_number"),  # <--- NY
+            F.get_json_object(F.col("payload"), "$.pull_request.number").cast(
+                "integer"
+            ),
+            F.lit(0),
+        ).alias("pr_number"),
         F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
         # Coalesce för att ge default False om "merged" saknas
         F.coalesce(

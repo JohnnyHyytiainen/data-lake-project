@@ -137,6 +137,7 @@ def build_pr_cycle_times(df_silver) -> None:
         df_pr.filter(F.col("pr_action") == "opened")
         .select(
             F.col("repo_name"),
+            F.col("pr_number"),  # <--- NY EFTER CARTESIAN PRODUCT TABBEN
             F.col("ts").alias("opened_at"),
         )
         .alias("opened")
@@ -146,6 +147,7 @@ def build_pr_cycle_times(df_silver) -> None:
         df_pr.filter((F.col("pr_action") == "closed") & (F.col("pr_merged") == True))
         .select(
             F.col("repo_name"),
+            F.col("pr_number"),  # <---- NY EFTER CARTESIAN PRODUCT TABBEN
             F.col("ts").alias("closed_at"),
         )
         .alias("closed")
@@ -154,17 +156,12 @@ def build_pr_cycle_times(df_silver) -> None:
     # Self JOIN. Para ihop opened med closed på samma repo. Lägg till villkoret att closed måste vara EFTER opened
     # OCH att skillnaden är "rimlig" < 30 dagar == 2 593 000 sec.
     df_joined = (
-        df_opened.join(df_closed, on="repo_name", how="inner")
-        .filter(F.col("closed.closed_at") > F.col("opened.opened_at"))
+        df_opened.join(df_closed, on=["repo_name", "pr_number"], how="inner")
         .withColumn(
             "cycle_hours",
-            (
-                F.unix_timestamp("closed.closed_at")
-                - F.unix_timestamp("opened.opened_at")
-            )
-            / 3600,  # sek -> timmar
+            (F.unix_timestamp("closed_at") - F.unix_timestamp("opened_at")) / 3600,
         )
-        .filter(F.col("cycle_hours") < 720)  # MAX 30 days
+        .filter(F.col("cycle_hours").between(0, 720))
     )
 
     # Aggregerar per repo. Median och 95th percentile för cykeltider.
