@@ -64,19 +64,20 @@ def build_tool_growth(df_silver) -> None:
 
     df = (
         df_silver.filter(F.col("event_type").isin("WatchEvent", "ForkEvent"))
-        # Konvertera created_at str till timestamp så att date_trunc fungerar och inte ger issues
+        # Konverterar created_at str till timestamp så att date_trunc fungerar
         .withColumn("ts", F.to_timestamp("created_at"))
         .withColumn("week", F.date_trunc("week", F.col("ts")))
         .groupBy("repo_name", "week", "event_type")
-        # Pivot: gör om event_type rader till kolumner (stars, forks)
-        # Innan pivot: repo | week | event_type | count
-        # Efter pivot: repo | week | stars      | forks
+        .agg(F.count("*").alias("event_count"))
+        # Pivot: gör om event_type-rader till kolumner (stars, forks)
+        # Innan pivot:  repo | week | event_type | count
+        # Efter pivot:  repo | week | stars      | forks
         .groupBy("repo_name", "week")
         .pivot("event_type", ["WatchEvent", "ForkEvent"])
         .agg(F.first("event_count"))
         .withColumnRenamed("WatchEvent", "stars")
         .withColumnRenamed("ForkEvent", "forks")
-        # Fyll null med 0, om en vecka hade stars men INGA forks blir forks null...
+        # Fyll null med 0, om en vecka hade stars men inga forks blir forks null
         .fillna(0, subset=["stars", "forks"])
         .orderBy("repo_name", "week")
     )
@@ -99,13 +100,13 @@ def build_activity_heatmap(df_silver) -> None:
 
     df = (
         df_silver.withColumn("ts", F.to_timestamp("created_at"))
-        # hour() extraherar timmen(0-23) från en timestamp
+        # hour() extraherar timmen (0-23) från en timestamp
         .withColumn("hour_of_day", F.hour("ts"))
-        # dayofweek() ger 1=Söndag, 2=Måndag .. .. 7=Lördag
+        # dayofweek() ger 1=Söndag, 2=Måndag ... 7=Lördag
         .withColumn("day_of_week", F.dayofweek("ts"))
-        # date_format ger mig läsbara namn: "Monday", "Tuesday".. ..
+        # date_format ger mig läsbara namn: "Monday", "Tuesday" etc
         .withColumn("day_name", F.date_format("ts", "EEEE"))
-        .groupBY("hour_of_day", "day_of_week", "day_name")
+        .groupBy("hour_of_day", "day_of_week", "day_name")
         .agg(F.count("*").alias("event_count"))
         .orderBy("day_of_week", "hour_of_day")
     )
