@@ -49,3 +49,10 @@
 - Write `silver_to_gold.py` docs to better understand PySparks strenghts and weaknesses compared to Pandas
     - Ongoing
 
+**Saturday 11/04-2026**
+*Goals for today:*
+- Branch out to `silver_to_gold.py` and start writing silver to gold aggregation script
+    - 
+    
+- Write `silver_to_gold.py` docs to better understand PySparks strenghts and weaknesses compared to Pandas
+    - Ongoing
