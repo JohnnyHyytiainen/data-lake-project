@@ -44,8 +44,28 @@
     - **Done**
 
 - Branch out to `silver_to_gold.py` and start writing silver to gold aggregation script
-    - Ongoing
+    - **Done**
     
 - Write `silver_to_gold.py` docs to better understand PySparks strenghts and weaknesses compared to Pandas
-    - Ongoing
+    - **Done**
 
+**Saturday 11/04-2026**
+*Goals for today:*
+- Branch out to `silver_to_gold.py` and start writing silver to gold aggregation script
+    - **Done**
+    
+- Write `silver_to_gold.py` docs to better understand PySparks strenghts and weaknesses compared to Pandas
+    - **Done**
+
+- Refactor `silver_to_gold.py` script since i stumbled upon the infamous "Cartesian join".
+    - **DONE!!!!!!**
+    - **Done with rite of passage fumble every aspiring Data Engineer stumbles upon**
+
+- Write more docs regarding silver to gold script explaining my error and naivety relying upon low cardinality assuming it would work.
+    - **Done**
+
+- Refactor `bronze_to_silver.py` script to include `pr_number` in the flattening.
+    - **Done**
+
+- Do EDA(exploratory Data Analysis on my own fetched data)!
+    - Ongoing
