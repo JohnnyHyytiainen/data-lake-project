@@ -143,7 +143,7 @@ def build_pr_cycle_times(df_silver) -> None:
     )
 
     df_closed = (
-        df_pr.filter((F.col("pr_action") == "closed") & (F.col("pr_merged") == True))
+        df_pr.filter((F.col("pr_action") == "closed") & F.col("pr_merged"))
         .select(
             F.col("repo_name"),
             F.col("pr_number"),  # <---- NY EFTER CARTESIAN PRODUCT TABBEN
@@ -192,7 +192,7 @@ def run_silver_to_gold() -> None:
     )
     spark.sparkContext.setLogLevel("ERROR")
 
-    logger.info("Starting Silver to Gold transformation withPySpark")
+    logger.info("Starting Silver to Gold transformation with PySpark")
 
     df_silver = spark.read.parquet(str(SILVER_DIR)).cache()
     total = df_silver.count()

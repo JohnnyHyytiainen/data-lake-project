@@ -68,4 +68,27 @@
     - **Done**
 
 - Do EDA(exploratory Data Analysis on my own fetched data)!
+    - **Done**
+
+**Sunday 12/04-2026**
+*Goals for today:*
+- Write my own CLI commands for all layers in pipeline. Bronze to Gold aggregation. `run_pipeline.py`
+    - **Done**
+
+- Write own docs regarding `lazy imports` to better understand the purpose of them in `run_pipeline.py` script
+    - **Done**
+
+- Start reading up on theory regarding incremental reading to prepare for tomorrows script writing session.
+    - **Done + ongoing**
+
+**Monday 13/04-2026**
+*Goals for today:*
+- Write own docs from Sundays theory session regarding incremental reading.
     - Ongoing
+    
+- Add Incremental reading as noted in ROADMAP.md
+    - Ongoing
+
+- Containerize PySpark for ease of use.
+    - Ongoing
+

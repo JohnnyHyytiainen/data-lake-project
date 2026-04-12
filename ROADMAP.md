@@ -54,7 +54,7 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 - [x] `transforms/silver_to_gold.py` - PySpark aggregeringar
 
 ### Cli commands (Argparse)
-- [] `scripts/run_pipeline.py` - CLI commands för att kunna köra Silver - Gold layer med enkla commands.
+- [x] `scripts/run_pipeline.py` - CLI commands för att kunna köra Silver - Gold layer med enkla commands.
 
 ### Docker
 - [ ] Lägg till PySpark-container i `docker-compose.yml`
@@ -82,9 +82,9 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-1. Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers.
+- Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers. **DONE**
+1. Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 2. Lägg till PySpark-container i `docker-compose.yml`
-3. Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 
 ---
 
