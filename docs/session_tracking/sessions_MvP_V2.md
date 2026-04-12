@@ -68,4 +68,15 @@
     - **Done**
 
 - Do EDA(exploratory Data Analysis on my own fetched data)!
+    - **Done**
+
+**Sunday 12/04-2026**
+*Goals for today:*
+- Write my own CLI commands for all layers in pipeline. Bronze to Gold aggregation. `run_pipeline.py`
+    - Ongoing
+
+- Containerize PySpark for ease of use.
+    - Ongoing
+
+- Add Incremental reading as noted in ROADMAP.md
     - Ongoing
