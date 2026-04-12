@@ -52,16 +52,16 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 
 ### Transform (Gold)
 - [x] `transforms/silver_to_gold.py` - PySpark aggregeringar
-- [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
-- [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
-- [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
+
+### Cli commands (Argparse)
+- [] `scripts/run_pipeline.py` - CLI commands för att kunna köra Silver - Gold layer med enkla commands.
 
 ### Docker
 - [ ] Lägg till PySpark-container i `docker-compose.yml`
 
 ---
 
-## MVP v3 - Orchestration + Serving
+## MVP v3 - Orchestration + Serving + dbt
 
 Mål: Airflow schemalägger hela pipelinen automatiskt,
 Grafana visualiserar Gold-lagret.
@@ -74,11 +74,17 @@ Grafana visualiserar Gold-lagret.
 - [ ] `serving/grafana/dashboards/de_community.json` - dashboard med tool_growth, activity_heatmap, pr_cycle_times
 - [ ] Lägg till Grafana i `docker-compose.yml`
 
+### dbt
+- [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
+- [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
+- [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
 ---
 
 ## Nästa steg (just nu)
 
-1. Grena ut till `feat/silver-to-gold` och börja MVP v2 **Done**
+1. Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers.
+2. 
+3. 
 
 ---
 
