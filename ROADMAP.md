@@ -83,8 +83,8 @@ Grafana visualiserar Gold-lagret.
 ## Nästa steg (just nu)
 
 1. Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers.
-2. 
-3. 
+2. Lägg till PySpark-container i `docker-compose.yml`
+3. Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 
 ---
 
