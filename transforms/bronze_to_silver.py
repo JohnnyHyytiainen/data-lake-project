@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 from loguru import logger
 import shutil
+import json
+from datetime import datetime, timezone
 
 # NYTT: PySpark imports
 from pyspark.sql import SparkSession
@@ -15,12 +17,18 @@ os.environ.setdefault("HADOOP_HOME", r"C:/Program Files/hadoop")
 os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
+
 from config import (
     BRONZE_DIR,
     SILVER_DIR,
     LOG_LEVEL,
     RELEVANT_EVENT_TYPES,
 )
+
+# ==== CHECKPOINT-HANTERING ===
+# Checkpoint filen ska leva utanför data folders så den aldrig råkar rensas
+# av shutil.rmtree när jag rensar silver-partitions
+CHECKPOINT_FILE = Path("data/checkpoints/bronze_to_silver.json")
 
 # ========== LOGGING ==========
 logger.remove()
@@ -35,6 +43,53 @@ logger.add(
 # Dead Letter Queue bor bredvid silver, inte i silver. Oväntad data har sin egen plats
 # så att jag kan inspektera den senare utan att utan att skita ner silver layer
 DLQ_DIR = Path("data/dlq/events")
+
+
+# ========== CHECKPOINT FUNKTIONER ==========
+def _load_checkpoint() -> set[str]:
+    """
+    Reads the checkpoint file and returns an array of already processed
+    file paths. Returns an empty array if the file does not yet exist
+    this is expected behavior on first run.
+
+    Uses a set (array) instead of a list for an important
+    reason: checking if a file has already been processed is O(1)
+    with a set, versus O(n) with a list. When you have thousands
+    of checkpointed files, this matters a lot.
+    """
+    if not CHECKPOINT_FILE.exists():
+        logger.info("No checkpoint found - Will process ALL Bronze files.")
+        return set()
+
+    with open(CHECKPOINT_FILE, "r") as f:
+        data = json.load(f)
+        processed = set(data.get("processed_files", []))
+        last_run = data.get("last_run", "unknown")
+        logger.info(
+            f"Checkpoint loaded | {len(processed)} files already processed | last_run={last_run}"
+        )
+        return processed
+
+
+def _save_checkpoint(processed_files: set[str]) -> None:
+    """
+    Writes an updated checkpoint file to disk after a successful run.
+    I ALWAYS write the checkpoint after the Silver data is safely on disk,
+    never before. Same principle as offset-commit in consumer.py:
+    data to disk is always priority one.
+    """
+    CHECKPOINT_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(CHECKPOINT_FILE, "w") as f:
+        json.dump(
+            {
+                "processed_files": list(processed_files),
+                "last_run": datetime.now(timezone.utc).isoformat(),
+            },
+            f,
+            indent=2,
+        )
+    logger.info(f"Checkpoint saved | {len(processed_files)} total processed files")
 
 
 # ========== Huvudfunktion ==========
@@ -55,13 +110,30 @@ def run_bronze_to_silver() -> None:
     )
     # Sätter log nivå till ERROR så Spark inte ska spamma terminalen med WARN
     spark.sparkContext.setLogLevel("ERROR")
-
     logger.info("Starting Bronze -> Silver transformation (PySpark)")
 
-    # Läser HELA bronze layer i en operation.
-    df_bronze = spark.read.parquet(str(BRONZE_DIR))
+    # ========== INKREMENTELL FIL SELEKTION ==========
+    # Hitta ALLA Bronze filer och filtrera bort de jag redan bearbetat.
+    all_bronze_files = [str(p) for p in BRONZE_DIR.rglob("*.parquet")]
+    processed_files = _load_checkpoint()
+
+    new_files = [f for f in all_bronze_files if f not in processed_files]
+
+    if not new_files:
+        logger.info("No new Bronze files since last run - Nothing to do!")
+        spark.stop()
+        return
+
+    logger.info(
+        f"Found {len(all_bronze_files)} total Bronze files | "
+        f"{len(processed_files)} already processed | "
+        f"{len(new_files)} new files to process"
+    )
+
+    # Läs BARA in de NYA filerna, INTE hela Bronze layer.
+    df_bronze = spark.read.parquet(*new_files)
     total = df_bronze.count()
-    logger.info(f"Loaded: {total} total events from Bronze Layer")
+    logger.info(f"Loaded {total} new events from Bronze layer.")
 
     # ========== Filtrera på kända event typer ==========
     df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
@@ -134,6 +206,14 @@ def run_bronze_to_silver() -> None:
     )
 
     logger.info(f"Wrote {silver_count} Silver records -> {SILVER_DIR}")
+
+    # ===== Spara checkpoint EFTER att Silver är säkert på disk =====
+    # Om jag sparade checkpointen INNAN skrivningen och sedan kraschade
+    # hade systemet lurats att tro att filerna är bearbetade men
+    # Silver-datan skulle saknas. Data till disk alltid prio 1, 2 och 3.
+    updated_processed = processed_files | set(new_files)
+    _save_checkpoint(updated_processed)
+
     logger.info("Bronze -> Silver transformation complete")
 
     spark.stop()

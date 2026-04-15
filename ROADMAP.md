@@ -48,7 +48,7 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 
 ### Transform (Silver -> PySpark)
 - [x] Porta `bronze_to_silver.py` från Pandas till PySpark
-- [ ] Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
+- [x] Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
 
 ### Transform (Gold)
 - [x] `transforms/silver_to_gold.py` - PySpark aggregeringar
@@ -56,15 +56,15 @@ bygg Gold-lagret med dbt, kör bootstrap av historisk data.
 ### Cli commands (Argparse)
 - [x] `scripts/run_pipeline.py` - CLI commands för att kunna köra Silver - Gold layer med enkla commands.
 
-### Docker
-- [ ] Lägg till PySpark-container i `docker-compose.yml`
-
 ---
 
 ## MVP v3 - Orchestration + Serving + dbt
 
 Mål: Airflow schemalägger hela pipelinen automatiskt,
 Grafana visualiserar Gold-lagret.
+
+### Docker
+- [ ] Lägg till PySpark-container i `docker-compose.yml`
 
 ### Orchestration
 - [ ] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
@@ -83,8 +83,8 @@ Grafana visualiserar Gold-lagret.
 ## Nästa steg (just nu)
 
 - Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers. **DONE**
-1. Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats
-2. Lägg till PySpark-container i `docker-compose.yml`
+- Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats. **DONE**
+1. Lägg till PySpark-container i `docker-compose.yml`
 
 ---
 

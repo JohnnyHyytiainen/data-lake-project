@@ -81,13 +81,13 @@
 - Start reading up on theory regarding incremental reading to prepare for tomorrows script writing session.
     - **Done + ongoing**
 
-**Monday 13/04-2026**
+**Wednesday 15/04-2026**
 *Goals for today:*
 - Write own docs from Sundays theory session regarding incremental reading.
-    - Ongoing
+    - **Done**
     
 - Add Incremental reading as noted in ROADMAP.md
-    - Ongoing
+    - **Done**
 
 - Containerize PySpark for ease of use.
     - Ongoing
