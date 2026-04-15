@@ -1,5 +1,5 @@
 # Session tracking notes for MvP v2
-*ONGOING*
+**DONE**
 
 
 **Monday 30/03-2026** 
