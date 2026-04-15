@@ -91,6 +91,7 @@ docker/.env
 data/bronze/
 data/silver/
 data/gold/
+data/checkpoints
 
 # --- Apache Spark ---
 spark-warehouse/
