@@ -38,7 +38,7 @@ med CI och tester. Ingen extern databas, all storage är Parquet-filer.
 
 ---
 
-## MVP v2 — PySpark + dbt
+## MVP v2 — PySpark
 
 Mål: Ersätt Pandas med PySpark för Bronze -> Silver,
 bygg Gold-lagret med dbt, kör bootstrap av historisk data.
@@ -82,9 +82,7 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-- Påbörja tillägget av cli och Argparse för `run_pipeline.py` för att kunna köra alla layers. **DONE**
-- Lägg till inkrementell läsning - håll koll på vilka Bronze-filer som redan bearbetats. **DONE**
-1. Lägg till PySpark-container i `docker-compose.yml`
+1. Börja planera och implementera ändringarna - tilläggen som ska göras i MvP 3
 
 ---
 
