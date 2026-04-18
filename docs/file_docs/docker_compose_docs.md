@@ -46,3 +46,33 @@ Detta är vad som ska skrivas in i min docker-compose.yml direkt efter `consumer
     volumes:
       - ./data:/app/data              # Samma bind mount som consumer - Bronze in, Silver/Gold ut
 ```
+
+## Issues faced:
+Issues jag stötte på med nuvarande försök att köra med `bitnami/spark` image är detta:
+```text
+✘ Image docker.io/bitnami/spark:4.1 Error failed to resolve reference "docker.io/bitnami/spark:4.1": docker.io/bitnami/spark:4.1: not found                                                         0.6s
+Error response from daemon: failed to resolve reference "docker.io/bitnami/spark:4.1": docker.io/bitnami/spark:4.1: not found
+```
+
+- Anledningen är detta:
+    - Bitnami arkiverade sina Docker Hub-images efter september 2025 och numera är specifika versionstaggar bara tillgängliga via en betalprenumeration. Gratisanvändare har bara tillgång till latest-taggen, avsedd för utveckling och testning.
+
+- Lösningen(förhoppningsvis) är detta: **Den officiella Apache-imagen, `apache/spark`**
+    - Min `docker-compose.yml`-fil kommer nu se ut så här efter spark:
+
+```docker
+# ======== PySpark (Standalone mode) ========
+  spark:
+    image: apache/spark:3.5.3          # Officiell Apache-image, Java + Spark inkluderat
+    container_name: spark
+    user: "0"                           # Kör som root för att undvika permission-problem med volumes
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    command: >
+      /opt/spark/sbin/start-master.sh
+    ports:
+      - "8080:8080"                     # Spark Web UI
+      - "7077:7077"                     # Spark master port
+    volumes:
+      - ./data:/app/data
+```
