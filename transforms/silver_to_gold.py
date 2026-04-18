@@ -89,7 +89,7 @@ def build_activity_heatmap(df_silver) -> None:
     """
     Answering: when is the DE community active?
 
-    Im extract the hour (0-23) and day of the week (1=Sunday, 7=Saturday in Spark)
+    Im extracting the hour (0-23) and day of the week (1=Sunday, 7=Saturday in Spark)
     from created_at and count the total number of events per combination.
     The result is a 7x24 matrix, a heatmap, that shows which
     hours and days are most active. It is this table

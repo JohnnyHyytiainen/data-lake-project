@@ -64,7 +64,7 @@ Mål: Airflow schemalägger hela pipelinen automatiskt,
 Grafana visualiserar Gold-lagret.
 
 ### Docker
-- [ ] Lägg till PySpark-container i `docker-compose.yml`
+- [x] Lägg till PySpark-container i `docker-compose.yml`
 
 ### dbt
 - [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
@@ -83,7 +83,7 @@ Grafana visualiserar Gold-lagret.
 
 ## Nästa steg (just nu)
 
-1) - Lägg till PySpark-container i `docker-compose.yml`
+1) - Lägg till PySpark-container i `docker-compose.yml` **DONE**
 2) - dbt
 3) - Airflow
 4) - Grafana
