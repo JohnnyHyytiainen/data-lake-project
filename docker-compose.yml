@@ -62,6 +62,23 @@ services:
     volumes:
       - ./data:/app/data             # Bind mount - Parquet-filer hamnar på host-maskinen
 
+
+  # ======== PySpark (Standalone mode) ========
+# ======== PySpark (Standalone mode) ========
+  spark:
+    image: apache/spark:3.5.3          # Officiell Apache-image, Java + Spark inkluderat
+    container_name: spark
+    user: "0"                           # Kör som root för att undvika permission-problem med volumes
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    command: >
+      /opt/spark/sbin/start-master.sh
+    ports:
+      - "8080:8080"                   # Spark Web UI - du kan se dina jobb i webbläsaren här
+      - "7077:7077"                   # Spark master port - hit ansluter workers (och senare Airflow)
+    volumes:
+      - ./data:/app/data              # Samma bind mount som consumer - Bronze in, Silver/Gold ut
+
 networks:
   default:
     name: data-lake-network
