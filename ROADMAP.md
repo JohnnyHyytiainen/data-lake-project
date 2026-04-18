@@ -82,11 +82,11 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
+1) - dbt
+2) - Airflow
+3) - Grafana
 
-1) - Lägg till PySpark-container i `docker-compose.yml` **DONE**
-2) - dbt
-3) - Airflow
-4) - Grafana
+
 
 ---
 
