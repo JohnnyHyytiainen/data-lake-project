@@ -66,6 +66,11 @@ Grafana visualiserar Gold-lagret.
 ### Docker
 - [ ] Lägg till PySpark-container i `docker-compose.yml`
 
+### dbt
+- [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
+- [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
+- [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
+
 ### Orchestration
 - [ ] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
 - [ ] Lägg till Airflow i `docker-compose.yml`
@@ -74,15 +79,14 @@ Grafana visualiserar Gold-lagret.
 - [ ] `serving/grafana/dashboards/de_community.json` - dashboard med tool_growth, activity_heatmap, pr_cycle_times
 - [ ] Lägg till Grafana i `docker-compose.yml`
 
-### dbt
-- [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
-- [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
-- [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
 ---
 
 ## Nästa steg (just nu)
 
-1. Börja planera och implementera ändringarna - tilläggen som ska göras i MvP 3
+1) - Lägg till PySpark-container i `docker-compose.yml`
+2) - dbt
+3) - Airflow
+4) - Grafana
 
 ---
 
