@@ -1,0 +1,15 @@
+# profiles.yml
+# Anslutnings profil för DuckDB. "path" är vart DuckDB skapar sin .duckdb fil
+# Relativ sökväg utgår från dbt/ folder därav ../data/dbt/ för att undvika pathing gremlins
+
+github_data_lake:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../data/dbt/github_lake.duckdb"
+      threads: 4
+
+      # DuckDB skapar den här filen automatiskt om den inte finns.
+      # Hela data/dbt/-mappen är .gitignored.
+      # Det här är ett local state, precis som min checkpoint-fil i Silver lagret

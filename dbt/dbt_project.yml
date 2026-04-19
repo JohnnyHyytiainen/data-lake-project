@@ -1,0 +1,25 @@
+# dbt_projects.yml
+# Mitt Data lake projekts identitet och konfig
+# Varje inställning här gäller globalt om den inte åsidosätts på modell nivå.
+
+name: 'github_data_lake'
+version: '1.0.0'
+config-version: 2
+
+# Profile måste matcha EXAKT mot ett block i min profiles.yml
+profile: 'github_data_lake'
+
+# Vart dbt letar efter modeller, tester, macros etc etc.
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+# Här definierar jag default materialisering per lager.
+# Staging som VIEW är smart: de kostar ingenting att lagra och alltid uppdaterade
+# Marts som TABLE ger mig faktiska filer i DuckDB att ansluta Grafana till längre fram.
+models:
+  github_data_lake:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

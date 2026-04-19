@@ -16,6 +16,8 @@ dependencies = [
     "pyspark>=3.5.0",
     "matplotlib>=3.10.8",
     "seaborn>=0.13.2",
+    "dbt-core>=1.11.8",
+    "dbt-duckdb>=1.10.1",
 ]
 
 [dependency-groups]

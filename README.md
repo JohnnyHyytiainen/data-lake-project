@@ -25,7 +25,7 @@ github-data-lake/
 │   ├── bronze_to_silver.py               # PySpark: rådata → validerad
 │   └── silver_to_gold.py                 # PySpark: validerad → aggregerad
 │
-├── dbt/                                  # MVP v2
+├── dbt/                                  # MVP v3
 │   ├── dbt_project.yml
 │   ├── profiles.yml
 │   └── models/
@@ -76,9 +76,9 @@ github-data-lake/
 │   │   ├── transforms.mmd                # Silver + Gold
 │   │   └── serving.mmd                   # Grafana-lagret
 │   └── session_tracking/                 # Lärloggar per session
-│       └── session_001.md
+│       └── session_00x.md
 │
-├── docker-compose.yml                    # Kafka + KRaft (+ senare Airflow)
+├── docker-compose.yml                    # Kafka + KRaft + Spark (+ senare Airflow)
 ├── .env                                  # Gitignorerad
 ├── .env.example                          # Committad (inga riktiga värden)
 ├── .gitignore
