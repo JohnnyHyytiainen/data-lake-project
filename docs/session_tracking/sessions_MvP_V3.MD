@@ -22,7 +22,7 @@
     - **Done**
 
 - Write my first mart `tool_growth.sql`
-    - *ONGOING* 
+    - **Done**
 
 
 - Write own docs/notes regarding `dbt` and `DuckDB`
