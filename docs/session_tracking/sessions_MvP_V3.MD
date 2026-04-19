@@ -8,3 +8,22 @@
 
 - Write docs regarding `Spark` and `docker-compose`, `dbt` and `Airflow`
     - **Done**
+
+**Sunday 19/04-2026**
+*Goals for today:*
+- Get all set up for scripts. That will include:
+    - deps
+    - `dbt_project.yml`
+    - `profiles.yml`(DuckDB config)
+    - `dbt debug` to verify that everything is able to talk to eachother.
+        - *ONGOING*
+
+- Start to write my staging model. `stg_github_events.sql`, this will read my silver parquet files. This is the foundation that all my mart-models will be built upon.
+    - *ONGOING*
+
+- Write my first mart `tool_growth.sql`
+    - *ONGOING* 
+
+
+- Write own docs/notes regarding `dbt` and `DuckDB`
+    - *ONGOING*

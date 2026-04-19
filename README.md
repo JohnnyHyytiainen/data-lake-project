@@ -76,7 +76,7 @@ github-data-lake/
 │   │   ├── transforms.mmd                # Silver + Gold
 │   │   └── serving.mmd                   # Grafana-lagret
 │   └── session_tracking/                 # Lärloggar per session
-│       └── session_001.md
+│       └── session_00x.md
 │
 ├── docker-compose.yml                    # Kafka + KRaft + Spark (+ senare Airflow)
 ├── .env                                  # Gitignorerad
