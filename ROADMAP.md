@@ -67,7 +67,7 @@ Grafana visualiserar Gold-lagret.
 - [x] Lägg till PySpark-container i `docker-compose.yml`
 
 ### dbt
-- [ ] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
+- [x] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
 - [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
 - [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
 
@@ -82,7 +82,7 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - dbt
+1) - `dbt/models/marts/activity_heatmap.sql` scriptet.
 2) - Airflow
 3) - Grafana
 
