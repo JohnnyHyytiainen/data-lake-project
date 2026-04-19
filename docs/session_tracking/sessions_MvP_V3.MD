@@ -19,7 +19,7 @@
         - **Done**
 
 - Start to write my staging model. `stg_github_events.sql`, this will read my silver parquet files. This is the foundation that all my mart-models will be built upon.
-    - *ONGOING*
+    - **Done**
 
 - Write my first mart `tool_growth.sql`
     - *ONGOING* 
