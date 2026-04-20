@@ -13,3 +13,6 @@ When that is successful its good practice to run a sanity check to confirm that 
 
 - `dbt show --select stg_github_events --profiles-dir . --limit 5`
 - This is like running `.head(5)` with pandas df.
+
+- `dbt run --profiles-dir .`
+- This command triggers the ENTIRE DAG in its correct order. Staging first, then all 3 marts in parallel

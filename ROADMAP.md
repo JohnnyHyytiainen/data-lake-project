@@ -69,7 +69,10 @@ Grafana visualiserar Gold-lagret.
 ### dbt
 - [x] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
 - [x] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
-- [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
+- [x] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
+
+### Containerisera dbt
+- [] `docker-compose` - Containerisera dbt innuti docker för att underlätta Airflow DAG.
 
 ### Orchestration
 - [ ] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
@@ -82,7 +85,7 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - `dbt/models/marts/pr_cycle_times.sql` scriptet.
+1) - Containerisera dbt
 2) - Airflow
 3) - Grafana
 
