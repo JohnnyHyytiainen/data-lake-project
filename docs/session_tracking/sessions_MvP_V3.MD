@@ -24,6 +24,14 @@
 - Write my first mart `tool_growth.sql`
     - **Done**
 
+- Write own docs/notes regarding `dbt` and `DuckDB` + `tool_growth.sql` script
+    - **Done**
 
-- Write own docs/notes regarding `dbt` and `DuckDB`
-    - *ONGOING*
+
+**Monday 20/04-2026**
+*Goals for today:*
+- Start writing on my `activity_heatmap.sql` and `pr_cycle_times.sql` dbt marts.
+    - *ongoing*
+
+- Write own docs/notes regarding `activity_heatmap.sql`, `pr_cycle_times.sql` and more details about `dbt`
+    - *ongoing*
