@@ -68,7 +68,7 @@ Grafana visualiserar Gold-lagret.
 
 ### dbt
 - [x] `dbt/models/marts/tool_growth.sql` - vilka DE-verktyg (dbt, Airflow, Spark) växer snabbast per vecka?
-- [ ] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
+- [x] `dbt/models/marts/activity_heatmap.sql` - när är DE-communityt aktivt (timme/veckodag)?
 - [ ] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
 
 ### Orchestration
@@ -82,7 +82,7 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - `dbt/models/marts/activity_heatmap.sql` scriptet.
+1) - `dbt/models/marts/pr_cycle_times.sql` scriptet.
 2) - Airflow
 3) - Grafana
 
