@@ -1,0 +1,13 @@
+# Dockerfile.dbt
+# Bygger en minimal dbt-duckdb image från en officiell Python-bas.
+# undviker ghcr.io-autentiseringsproblem och behåller kontrollen själv.
+
+FROM python:3.12-slim
+
+# Installerar dbt-duckdb adaptern inkluderar dbt-core som dependency,
+# så jag behöver bara ett paket. Pinnad version för reproducerbarhet.
+RUN pip install dbt-duckdb==1.9.2
+
+# Sätter working directory redan här så att containern vet var den "bor"
+# när den startar, docker-compose kan åsidosätta detta, men bra som default.
+WORKDIR /app/dbt

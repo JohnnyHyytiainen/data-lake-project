@@ -63,12 +63,12 @@ services:
       - ./data:/app/data             # Bind mount - Parquet-filer hamnar på host-maskinen
 
 
+  
   # ======== PySpark (Standalone mode) ========
-# ======== PySpark (Standalone mode) ========
   spark:
-    image: apache/spark:3.5.3          # Officiell Apache-image, Java + Spark inkluderat
+    image: apache/spark:3.5.3         # Officiell Apache-image, Java + Spark inkluderat
     container_name: spark
-    user: "0"                           # Kör som root för att undvika permission-problem med volumes
+    user: "0"                         # Kör som root för att undvika permission-problem med volumes
     environment:
       - SPARK_NO_DAEMONIZE=true
     command: >
@@ -78,6 +78,39 @@ services:
       - "7077:7077"                   # Spark master port - hit ansluter workers (och senare Airflow)
     volumes:
       - ./data:/app/data              # Samma bind mount som consumer - Bronze in, Silver/Gold ut
+
+  # ======== dbt (DuckDB ADAPTER) ========
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbt
+    container_name : dbt
+    # dbt måste köras från projektmappen för att hitta dbt_project.yml
+    # och lösa relativa sökvägar rätt, precis som när jag kör
+    # "dbt run" lokalt från github-data-lake/dbt/
+    working_dir: /app/dbt
+    profiles:
+      - manual
+    volumes:
+      # dbt-projektet: modeller, profiles.yml, dbt_project.yml
+      - ./dbt:/app/dbt
+      # Data-mappen: Silver Parquet-filer in, DuckDB-filen ut.
+      # Konsekvent med consumer och spark som också använder /app/data.
+      # Med working_dir=/app/dbt löser ../data/silver/ till /app/data/silver/
+      - ./data:/app/data
+
+    # dbt är inte en long running service som Kafka, den kör, gör sitt jobb,
+    # och avslutar. "dbt run" är default kommandot som Airflow
+    # senare kan åsidosätta med t.ex --select för selektiv körning.
+    command: ["dbt", "run"]
+
+    # profiles.yml ligger inne i ./dbt/ som jag mountat till /app/dbt.
+    # DBT_PROFILES_DIR talar om för dbt exakt vart den ska leta,
+    # undviker att dbt letar i ~/.dbt/ (home-mappen) som inte finns i containern.
+    environment:
+      DBT_PROFILES_DIR: /app/dbt
+
+
 
 networks:
   default:

@@ -35,3 +35,11 @@
 
 - Write own docs/notes regarding `activity_heatmap.sql`, `pr_cycle_times.sql` and more details about `dbt`
     - *ongoing*
+
+**Wednesday 22/04-2026**
+*Goals for today:*
+- Containerise DBT in Docker and test it to make sure everything runs smoothly.
+    - **Done**
+
+- Write more comprehensive docs regarding docker and dbt. More theory is needed.
+    - 
