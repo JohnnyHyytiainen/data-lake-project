@@ -32,3 +32,6 @@
 
 * To verify that Spark can REACH my data, that is, my volume `./data:/app/data` works properly. I can run this command inside my spark container.
     - `ls /app/data`
+
+* To run DBT form my docker container I use this command:
+    * `docker-compose run dbt`
