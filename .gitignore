@@ -92,7 +92,7 @@ data/bronze/
 data/silver/
 data/gold/
 data/checkpoints
-
+data/dbt
 
 # --- Apache Spark ---
 spark-warehouse/
