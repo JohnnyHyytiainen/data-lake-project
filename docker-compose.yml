@@ -89,13 +89,15 @@ services:
     # och lösa relativa sökvägar rätt, precis som när jag kör
     # "dbt run" lokalt från github-data-lake/dbt/
     working_dir: /app/dbt
+    profiles:
+      - manual
     volumes:
       # dbt-projektet: modeller, profiles.yml, dbt_project.yml
       - ./dbt:/app/dbt
       # Data-mappen: Silver Parquet-filer in, DuckDB-filen ut.
       # Konsekvent med consumer och spark som också använder /app/data.
       # Med working_dir=/app/dbt löser ../data/silver/ till /app/data/silver/
-      - ./dbt:/app/data
+      - ./data:/app/data
 
     # dbt är inte en long running service som Kafka, den kör, gör sitt jobb,
     # och avslutar. "dbt run" är default kommandot som Airflow
