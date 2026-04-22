@@ -72,7 +72,7 @@ Grafana visualiserar Gold-lagret.
 - [x] `dbt/models/marts/pr_cycle_times.sql` - hur lång är medel-PR-cykeln i top DE-repos?
 
 ### Containerisera dbt
-- [] `docker-compose` - Containerisera dbt innuti docker för att underlätta Airflow DAG.
+- [x] `docker-compose` - Containerisera dbt innuti docker för att underlätta Airflow DAG.
 
 ### Orchestration
 - [ ] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens

@@ -34,4 +34,5 @@
     - `ls /app/data`
 
 * To run DBT form my docker container I use this command:
-    * `docker-compose run dbt`
+    * `docker-compose run dbt` <- This command leaves a useless container left after running the gold dbt aggregations
+    * `docker-compose run --rm dbt` <- This command REMOVES the container after gold aggregations are done. This is the one to run.
