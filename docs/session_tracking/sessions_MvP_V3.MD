@@ -42,4 +42,28 @@
     - **Done**
 
 - Write more comprehensive docs regarding docker and dbt. More theory is needed.
-    - 
+    - *ongoing*
+
+
+**Thursday 23/04, Friday 24/04, & Saturday 25/04-2026**
+*Goals for all three days:*
+- Setup Airflow DAG
+    - *ongoing*
+
+- Containerize Airflow and update `docker-compose-yml`
+    - *ongoing*
+
+- Write Airflow and DAG docs
+    - *ongoing*
+
+- Start working on serving layer with `grafana`
+    - *Ongoing* 
+
+- Start planning on next steps for MVP v4 and beyond.
+    - More questions that needs to be answered from the data.
+    - Bots vs humans
+    - Expand the data lake to maybe look for more data from github API + github archives
+
+    - Incorporate a vector DB + embeddings to introduce a layer of RAG over my entire data lake
+        - Retrieve or run queries on data for more insights with said models?
+        

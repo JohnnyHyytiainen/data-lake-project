@@ -85,10 +85,13 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - Containerisera dbt
-2) - Airflow
+1) - Airflow
+2) - Containerisera Airflow
 3) - Grafana
+4) - Containerisera Grafana
+5) - Börja planera på nästa steg. Vad kan vidareutvecklas?
 
+- Containerisera dbt **DONE**
 
 
 ---
