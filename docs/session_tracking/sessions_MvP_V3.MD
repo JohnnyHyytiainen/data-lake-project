@@ -45,8 +45,8 @@
     - *ongoing*
 
 
-**Thursday 23/04, Friday 24/04, & Saturday 25/04-2026**
-*Goals for all three days:*
+**Friday 01/05, Saturday 02/05, Sunday 03/05-2026**
+*Goals for weekend:*
 - Setup Airflow DAG
     - *ongoing*
 
