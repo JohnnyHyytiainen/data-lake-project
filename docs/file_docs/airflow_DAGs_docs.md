@@ -13,4 +13,6 @@ De DAG diagram som visas vid sökning ser mer invecklade ut än vad det egentlig
 
     - **DAGs** är alltså ett flödesschema där pilarna *alltid* pekar framåt och *ALDRIG* bildar loopar. Det är "basically" allting. Rent konceptuellt dvs, i verkligheten är det en helt annan sak, att bygga det och förstå det på djupet är ett annat monster, det är därför jag ger mig på ett försök till att lyckas få det att fungera.
 
+- I stora drag så ser det ungefär ut så här: 'Gör steg A, sen steg B och C parallelt, sen gör steg D när *BÅDE* steg B och C är klara.
+
 ## 
