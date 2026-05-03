@@ -66,7 +66,9 @@ services:
   
   # ======== PySpark (Standalone mode) ========
   spark:
-    image: apache/spark:3.5.3         # Officiell Apache-image, Java + Spark inkluderat
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
     container_name: spark
     user: "0"                         # Kör som root för att undvika permission-problem med volumes
     environment:
