@@ -1,6 +1,7 @@
 # Bronze to silver script - För att
 # Kommentarer: Svenska
 # Kod: Engelska
+from __future__ import annotations
 import sys
 import os
 from pathlib import Path
