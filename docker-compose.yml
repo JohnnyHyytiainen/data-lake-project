@@ -114,15 +114,8 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres
-    environment:
-      # Dessa credentials används bara internt av Airflow.
-      # I produktion skulle dessa leva i .env för lokal MVP är det okej här.
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+    env_file: .env   # Läser POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB härifrån
     volumes:
-      # Postgres-data persisteras på disk så att Airflow-historik
-      # överlever docker-compose down. Samma princip som ./data för Parquet.
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
@@ -134,25 +127,24 @@ services:
   airflow-init:
     image: apache/airflow:2.10.5-python3.12
     container_name: airflow-init
-    # Kör som root tillfälligt för att sätta rätt filrättigheter på
-    # logs och plugins-mapparna, sedan initierar vi databasen och
-    # skapar admin. Avslutar när det är klart.
     entrypoint: /bin/bash
     command:
       - -c
       - |
         airflow db init &&
         airflow users create \
-          --username admin \
-          --password admin \
+          --username ${AIRFLOW_ADMIN_USERNAME} \
+          --password ${AIRFLOW_ADMIN_PASSWORD} \
           --firstname Johnny \
           --lastname H \
           --role Admin \
           --email admin@example.com
+    env_file: .env
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,12 +160,9 @@ services:
     command: airflow scheduler
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-      # Fernet-nyckeln krypterar känsliga värden (lösenord, API-nycklar)
-      # som lagras i Airflow-databasen. Genereras en gång och hålls konstant.
-      # För lokal MVP är ett hårdkodat värde okej.
-      AIRFLOW__CORE__FERNET_KEY: "81HqDtbqAywKSOumSha3BhWNOdQ26slT6K0YaZeZyPs="
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -181,7 +170,7 @@ services:
       - ./orchestration/dags:/opt/airflow/dags
       - ./orchestration/logs:/opt/airflow/logs
       - ./orchestration/plugins:/opt/airflow/plugins
-      # Docker socket — Schedulern behöver kunna starta containers
+      # Docker socket, Schedulern behöver kunna starta containers
       # (PySpark, dbt) när den exekverar tasks i DAG:en.
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -195,9 +184,9 @@ services:
       - "8081:8080"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-      AIRFLOW__CORE__FERNET_KEY: "81HqDtbqAywKSOumSha3BhWNOdQ26slT6K0YaZeZyPs="
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
