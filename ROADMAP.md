@@ -76,7 +76,8 @@ Grafana visualiserar Gold-lagret.
 
 ### Orchestration
 - [ ] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
-- [ ] Lägg till Airflow i `docker-compose.yml`
+- [x] Lägg till Airflow i `docker-compose.yml`
+- [x] Containerisera PostgreSQL databas innuti docker åt `AirFlow` 
 
 ### Serving
 - [ ] `serving/grafana/dashboards/de_community.json` - dashboard med tool_growth, activity_heatmap, pr_cycle_times
@@ -85,13 +86,14 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - Airflow
-2) - Containerisera Airflow
-3) - Grafana
+1) - Skriva min/mina första DAGs
+2) - Grafana dashboard
 4) - Containerisera Grafana
 5) - Börja planera på nästa steg. Vad kan vidareutvecklas?
 
 - Containerisera dbt **DONE**
+- Airflow **DONE**
+- Containerisera Airflow **DONE**
 
 
 ---

@@ -131,9 +131,9 @@ services:
     command:
       - -c
       - |
-        airflow db init &&
+        airflow db migrate &&
         airflow users create \
-          --username ${AIRFLOW_ADMIN_USERNAME} \
+          --username admin \
           --password ${AIRFLOW_ADMIN_PASSWORD} \
           --firstname Johnny \
           --lastname H \

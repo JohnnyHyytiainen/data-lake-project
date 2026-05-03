@@ -48,10 +48,10 @@
 **Friday 01/05, Saturday 02/05, Sunday 03/05-2026**
 *Goals for weekend:*
 - Setup Airflow DAG
-    - *ongoing*
+    - **Done**
 
 - Containerize Airflow and update `docker-compose-yml`
-    - *ongoing*
+    - **Done**
 
 - Write Airflow and DAG docs
     - *ongoing*
