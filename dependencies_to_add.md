@@ -29,8 +29,8 @@ dependencies = [
 # ========== MVP v2: PySpark + dbt ==========
 # Lägg till när jag når MVP v2:
 # "pyspark>=3.5.0" - DONE
-# "dbt-core>=1.7.0"
-# "dbt-spark>=1.7.0"
+# "dbt-core>=1.7.0" - DONE
+# "dbt-spark>=1.7.0" - DONE
 
 # ========== MVP v3: Airflow ==========
 # Airflow kör i egen Docker-container med eget venv, inte här

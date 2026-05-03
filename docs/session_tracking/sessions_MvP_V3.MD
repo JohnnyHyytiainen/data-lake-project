@@ -56,6 +56,9 @@
 - Write Airflow and DAG docs
     - *ongoing*
 
+- Write first DAGs script `github_lake_dag.py`
+    - *Ongoing*
+
 - Start working on serving layer with `grafana`
     - *Ongoing* 
 
