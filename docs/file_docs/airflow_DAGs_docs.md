@@ -214,3 +214,12 @@ USER spark
 - Förhoppningsvis så underlättar detta min framtida huvudvärk och slippa spela 'whack-a-mole' med mina dependencies. Dags för en
     - `docker-compose build spark`
     - `docker-compose up -d --force-recreate spark airflow-scheduler`
+
+## Issue nummer fyra efter att ha löst ModuleNotFoundErrors:
+Äntligen ett steg längre på vägen. Issue jag stöter på nu är detta:
+```docker
+[2026-05-03, 19:44:20 UTC] {docker.py:69} INFO -   File "/app/transforms/bronze_to_silver.py", line 49, in <module>
+[2026-05-03, 19:44:20 UTC] {docker.py:69} INFO -     def _load_checkpoint() -> set[str]:
+[2026-05-03, 19:44:20 UTC] {docker.py:69} INFO - TypeError: 'type' object is not subscriptable  
+```
+- Problemet: "standard" python compatability problem. set[str] som en typehint kräver python 3.9+ medan Spark containern använder en äldre version. Fixen BÖR vara `from __future__ import annotations` för att kunna kringgå detta.
