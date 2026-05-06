@@ -54,11 +54,11 @@
     - **Done**
 
 - Write Airflow and DAG docs
-    - *ongoing*
+    - **Done**
 
 - Write first DAGs script `github_lake_dag.py`
-    - *Ongoing*
-
+    - **Done**
+    
 - Start working on serving layer with `grafana`
     - *Ongoing* 
 
