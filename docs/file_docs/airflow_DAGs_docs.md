@@ -217,9 +217,40 @@ USER spark
 
 ## Issue nummer fyra efter att ha löst ModuleNotFoundErrors:
 Äntligen ett steg längre på vägen. Issue jag stöter på nu är detta:
+
+
 ```docker
 [2026-05-03, 19:44:20 UTC] {docker.py:69} INFO -   File "/app/transforms/bronze_to_silver.py", line 49, in <module>
 [2026-05-03, 19:44:20 UTC] {docker.py:69} INFO -     def _load_checkpoint() -> set[str]:
 [2026-05-03, 19:44:20 UTC] {docker.py:69} INFO - TypeError: 'type' object is not subscriptable  
 ```
 - Problemet: "standard" python compatability problem. set[str] som en typehint kräver python 3.9+ medan Spark containern använder en äldre version. Fixen BÖR vara `from __future__ import annotations` för att kunna kringgå detta.
+  - Lösningen bet och fungerade bra. Allting gick smidigt fram tills nästa problem:
+
+
+## Issue nummer 5+ efter ModuleNotFoundError, TypeErrors.
+Överkommit och jobbat mig förbi ovanstående issues. Allting flyter på i bronze_to_silver via Airflow. Dock så är NÄSTA hinder ett stort och helt nytt issue. I/O optimering. Skriva tusentals filer en för en fungerar bra i min lokala miljö på MIN laptop pga bra specs MEN skriva tusentals filer ifrån en `Docker-container` -> disk är ett helt annat monster jag inte stött på ännu.. 
+
+**Problemet att lösa är detta:**
+```markdown  
+**Jag har i skrivande stund så här många filer och PySpark jobbar med det väldigt fort, speciellt efter jag fick till min checkpoint fil**
+
+2026-05-07 13:04:52 | INFO | Starting Bronze -> Silver transformation (PySpark)
+2026-05-07 13:04:52 | INFO | Checkpoint loaded | 7961 files already processed | last_run=2026-05-01T15:51:20.286347+00:00
+2026-05-07 13:04:52 | INFO | Found 8208 total Bronze files | 7961 already processed | 247 new files to process
+2026-05-07 13:05:01 | INFO | Loaded 44677 new events from Bronze layer.         
+2026-05-07 13:05:04 | INFO | After event-type filter: 44677 events              
+2026-05-07 13:05:07 | INFO | Removed 26 duplicate events                        
+2026-05-07 13:05:15 | INFO | Flattened 44651 events to Silver schema            
+2026-05-07 13:05:37 | INFO | Wrote 44651 Silver records -> C:\Users\xxxxx-xxxxx-xxxxxx-xxxxx-xxxxxx
+2026-05-07 13:05:38 | INFO | Checkpoint saved | 8208 total processed files
+2026-05-07 13:05:38 | INFO | Bronze -> Silver transformation complete
+
+8.2k filer är... Extremt att skriva ETT parquet fragment(fil) per ursprunglig bronze fil. 8.2K Bronze filer skapade innebär 8.2k separata writing operations mot disk, varje har sin egen overhead i form av att öppna en fil, skriva metadata, stänga filen, det är här min I/O bottleneck är. Det är inte beräkningen som behöver optimeras eller ändras på utan det är mitt naiva designbeslut om HUR MÅNGA OUTPUT FILER som skapas.
+```
+
+**Lösningen på I/O bottlenecken är:**
+- `COALESCE`
+  - Konceptet är enkelt men väldigt kraftfullt. Med `coalesce` talar jag om för Spark att oavsett hur många partitioner som finns internt så SLÅ IHOP DOM till `X` partitioner när du skriver filerna. Istället för 8.2k+ filer per partition-dag så kanske jag skriver 1, 2, 3 eller 4 filer och körningen **BÖR** ta minuter istället för timmar om jag förstått det rätt.
+
+- Dock så finns det två val att göra här. `coalesce` och `repartition`. Båda valen minskar antalet output filer men fungerar väldigt olika i bakgrunden. `repartition(X)` blandar om all data helt mellan mina workers, tydligen en "dyr shuffle operation"(?) medan `coalesce(X)` ska slå ihop mina befintliga partitioner utan att flytta datan mellan mina workers(?). Om jag uppfattat det rätt, mer info behövs för att förstå vad som verkligen händer men `coalesce` verkar vara vägen att gå här.
