@@ -56,6 +56,11 @@ with DAG(
                 target="/app/config.py",
                 type="bind",
             ),
+            Mount(
+                source="/c/Users/johnn/Desktop/projekt/data-lake-project/data/checkpoints",
+                target="/app/data/checkpoints",
+                type="bind",
+            ),
         ],
         # Container tas bort per automatik när task är klar, likadant som --rm
         mount_tmp_dir=False,
