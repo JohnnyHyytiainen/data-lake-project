@@ -254,3 +254,75 @@ USER spark
   - Konceptet är enkelt men väldigt kraftfullt. Med `coalesce` talar jag om för Spark att oavsett hur många partitioner som finns internt så SLÅ IHOP DOM till `X` partitioner när du skriver filerna. Istället för 8.2k+ filer per partition-dag så kanske jag skriver 1, 2, 3 eller 4 filer och körningen **BÖR** ta minuter istället för timmar om jag förstått det rätt.
 
 - Dock så finns det två val att göra här. `coalesce` och `repartition`. Båda valen minskar antalet output filer men fungerar väldigt olika i bakgrunden. `repartition(X)` blandar om all data helt mellan mina workers, tydligen en "dyr shuffle operation"(?) medan `coalesce(X)` ska slå ihop mina befintliga partitioner utan att flytta datan mellan mina workers(?). Om jag uppfattat det rätt, mer info behövs för att förstå vad som verkligen händer men `coalesce` verkar vara vägen att gå här.
+
+---
+
+### Nuvarande skrivning från bronze -> Silver.
+- Så här ser nuvarande block ut där jag skriver mina Silver records:
+
+```python
+    # ========== Skriva till silver ==========
+    (
+        df_silver.withColumn("year", F.year(F.to_timestamp("created_at")))
+        # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
+        .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
+        .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
+        .write.mode("overwrite")
+        .partitionBy("year", "month", "day")
+        .parquet(str(SILVER_DIR))
+    )
+```
+- Ändringen kommer se ut så här:
+```python
+    # ========== Skriva till silver ==========
+    (
+        df_silver.withColumn("year", F.year(F.to_timestamp("created_at")))
+        # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
+        .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
+        .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
+        .coalesce(4)
+        .write.mode("overwrite")
+        .partitionBy("year", "month", "day")
+        .parquet(str(SILVER_DIR))
+    )
+```
+
+coalesce(4) slår ihop Sparks interna partitioner till max 4 output-filer per dag-partition istället för potentiellt hundratals småfiler. Jag väljer coalesce (inte repartition) för att undvika en dyr shuffle, coalesce kombinerar befintliga partitioner lokalt utan att flytta min data mellan Sparks interna workers. Resultatet ska på så vis leda till färre skriv operationer mot disk utan att behöva tänka på "shuffle".
+
+Förklaring ifrån CC som är värd att tänka på, lära sig och förstå **VARFÖR** positionen på `coalesce(4)` spelar roll.
+- `coalesce(4)` *måste* komma efter att jag har lagt till year, month och day kolumnerna **MEN** innan .write. Om jag hade lagt den innan `withColumn`-stegen hade Spark slagit ihop partitionerna och sedan försökt lägga till kolumner på en redan omstrukturerad DataFrame, det är i sig inte så farligt, men väldigt ineffektivt. Och om jag hade placerat `coalesce(4)` efter `.write` så leder det till syntaxfel eftersom write returnerar en DataFrameWriter, inte en DataFrame.
+
+
+## Succé. Körning av bronze_to_silver scriptet går igenom. Vidare till nästa issue.
+Nytt issue. 14 Körningar in och nu går äntligen bronze_to_silver igenom. Dock kraschar Airflow och systemet vid silver_to_gold körning. Fellogg:
+
+```docker
+[2026-05-07, 17:19:57 CEST] {docker.py:69} INFO - 15:19:57  Finished running  in 0 hours 0 minutes and 0.05 seconds (0.05s).
+[2026-05-07, 17:19:57 CEST] {docker.py:69} INFO - 15:19:57  Encountered an error:
+[2026-05-07, 17:19:57 CEST] {docker.py:69} INFO - Runtime Error
+[2026-05-07, 17:19:57 CEST] {docker.py:69} INFO -   IO Error: Could not set lock on file "/app/data/dbt/github_lake.duckdb": Conflicting lock is held in PID 0. See also https://duckdb.org/docs/stable/connect/concurrency
+[2026-05-07, 17:19:58 CEST] {taskinstance.py:3313} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 768, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 734, in _execute_callable
+    return ExecutionCallableRunner(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 424, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/docker/operators/docker.py", line 485, in execute
+    return self._run_image()
+           ^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/docker/operators/docker.py", line 362, in _run_image
+    return self._run_image_with_mounts(self.mounts, add_tmp_variable=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/docker/operators/docker.py", line 419, in _run_image_with_mounts
+    raise DockerContainerFailedException(f"Docker container failed: {result!r}", logs=log_lines)
+airflow.providers.docker.exceptions.DockerContainerFailedException: Docker container failed: {'StatusCode': 2}
+```
+- RunTimeError. Säkert pga tidigare .wal fil som spökar ifrån körning men så var inte fallet. Bronze datan är intakt, så nuvarande .duckdb fil är borttagen i dbt/ folder. Dags för ny manuell körning och se om det är smooth sailing.
