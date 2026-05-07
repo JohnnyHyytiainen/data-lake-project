@@ -201,6 +201,7 @@ def run_bronze_to_silver() -> None:
         # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
         .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
         .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
+        .coalesce(4)
         .write.mode("overwrite")
         .partitionBy("year", "month", "day")
         .parquet(str(SILVER_DIR))
