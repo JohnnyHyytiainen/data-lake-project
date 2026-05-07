@@ -1,0 +1,22 @@
+# Dockerfile för spark.
+# En officiell Spark image med mina projekts python deps
+# BÖR läsa ModuleNotFoundError när Airflow ska köra bronze to silver pipen
+# OM jag nu ändrar min DockerOperator också i github_lake_dag.py scriptet
+FROM apache/spark:3.5.3
+
+USER root
+
+# installerar pip och sen projektets deps direkt
+# Kopierar i stora drag bara min pyproject.toml fil och inte hela koden,
+# Koden bör mountas via volumes när jag kör allt
+RUN apt-get update && apt-get install -y python3-pip && \
+    pip install \
+      loguru \
+      pandas \
+      pyarrow \
+      python-dotenv \
+      pyspark==3.5.3
+# Värt att notera: Pyspark image har redan java och spark binaries installerade MEN Python binds(pyspark deps)
+# kommer behöva installeras separat för att min from pyspark.sql import SparkSession ska funka i mitt script..
+
+USER spark

@@ -54,10 +54,27 @@
     - **Done**
 
 - Write Airflow and DAG docs
-    - *ongoing*
+    - **Done**
 
+- Write first DAGs script `github_lake_dag.py`
+    - **Done**
+    
 - Start working on serving layer with `grafana`
     - *Ongoing* 
+
+
+**Thusday 07/05-2026**  
+*Goals for today:*  
+- Refactor `bronze_to_silver.py`-script, optimize its writing to avoid I/O bottlenecks when writing files. Need to write less files from events and not just 1 by 1. Bunch several files together and write one file. One file per each day from bronze -> Silver could be enough?
+    - *ongoing*
+
+- Mount `checkpoint`-file to not need to read in ALL files once more when running Airflow DAGs.
+    - *ongoing*
+
+
+
+--- 
+
 
 - Start planning on next steps for MVP v4 and beyond.
     - More questions that needs to be answered from the data.
