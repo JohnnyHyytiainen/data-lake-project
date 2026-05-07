@@ -75,11 +75,11 @@ Grafana visualiserar Gold-lagret.
 - [x] `docker-compose` - Containerisera dbt innuti docker för att underlätta Airflow DAG.
 
 ### Orchestration
-- [] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
+- [x] `orchestration/dags/github_lake_dag.py` - Airflow DAG som triggar Bronze -> Silver -> Gold i sekvens
 - [x] Lägg till Airflow i `docker-compose.yml`
 - [x] Containerisera PostgreSQL databas innuti docker åt `AirFlow` 
-- [] Mounta checkpoint filen i `DockerOperator`-mounts
-- [] Lägg till coalesce i silver skrivningen
+- [x] Mounta checkpoint filen i `DockerOperator`-mounts
+- [x] Lägg till coalesce i silver skrivningen
 
 ### Serving
 - [] `serving/grafana/dashboards/de_community.json` - dashboard med tool_growth, activity_heatmap, pr_cycle_times
@@ -88,20 +88,20 @@ Grafana visualiserar Gold-lagret.
 ---
 
 ## Nästa steg (just nu)
-1) - Mounta checkpoint-filen i DockerOperator-mountsen
-2) - Lägg till coalesce i Silver-skrivsteget
-2) - Grafana dashboard
-4) - Containerisera Grafana
-5) - Börja planera på nästa steg. Vad kan vidareutvecklas?
+1) - Grafana dashboard
+2) - Containerisera Grafana
+3) - Börja planera på nästa steg. Vad kan vidareutvecklas?
 
 - Containerisera dbt **DONE**
 - Airflow **DONE**
 - Containerisera Airflow **DONE**
 - Skriva min/mina första DAGs **DONE**
+- Mounta checkpoint-filen i DockerOperator-mountsen **DONE MEN BITER EJ ÄNNU**
+- Lägg till coalesce i Silver-skrivsteget **DONE**
 
 ---
 
 ## Kända begränsningar (dokumenterade)
 
 GitHub Events API returnerar max 100 events per poll och filtrerar hårt på DE_KEYWORDS - volymen är låg på helger.  
-Bootstrap med Github Archive är den primära lösningen för meningsfulla datamängder.
+Bootstrap med Github Archive är den primära lösningen för meningsfulla datamängder. Mountad checkpoint-fil via DockerOperator biter inte riktigt ännu vid körning av DAG. Ej stort problem just nu men bör ses över och fixas innan MVP v4 påbörjas.
