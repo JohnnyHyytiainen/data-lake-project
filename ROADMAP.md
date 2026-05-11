@@ -90,7 +90,7 @@ Grafana visualiserar Gold-lagret.
 ## Nästa steg (just nu)
 1) - Grafana dashboard
 2) - Containerisera Grafana
-3) - Börja planera på nästa steg. Vad kan vidareutvecklas?
+3) - Börja planera på nästa steg. Vad kan vidareutvecklas? (Gå från Airflow(gammalt) -> DAGster(nya) ev. Databricks(Free user, låst och kan bli väldigt begränsande MEN det kanske inte är allt för jobbigt. Jag kan köra det både lokalt via DAGster och rent via Databricks(?))). Hitta några cloude lösningar(Azure(?)), ta och planera nästkommande steg, något som ska deployas(GUI), lager RAG över det hela(Tänk Genie som du kan ställa frågor för att få svar, den gör queries åt dig på din data). Expandera mina search params(Det jag fiskar efter i projektet. Jag kanske kan bredda det lite mer, inte enbart activity heatmap, PR cycle times eller toolgrowth över tid. Vill kunna se antalet riktiga humans vs bots som gör PRs eller sköter flödet av OS projekt inom data engineering etc)
 
 - Containerisera dbt **DONE**
 - Airflow **DONE**
