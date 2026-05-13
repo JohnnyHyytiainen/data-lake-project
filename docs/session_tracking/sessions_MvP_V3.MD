@@ -72,6 +72,13 @@
     - *ongoing*
 
 
+**Wednesday 13/05-2026**
+*Goals for today:*
+- Start working on serving layer with `Grafana`-dashboard and get it working.
+    - *ongoing*
+
+- Containerise `grafana` and get it to work within my container(Update `Docker-compose.yml`)
+    - *ongoing*
 
 --- 
 
