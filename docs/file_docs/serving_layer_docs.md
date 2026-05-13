@@ -1,6 +1,6 @@
-# Own docs for Grafana and serving layer, and both their purpose.
+# Own docs for serving layer, and its purpose.
 
-Egna docs kring serving layer och Grafana(Dashboard)
+Egna docs kring serving layer.
 ---
 Serving layer eller visningslagret/serveringslager är oftast den sista delen i data-arkitekturen(OFTAST inom lambda-arkitektur(Läs på mer om denna) och `Medallion`-arkitektur/`gold`-layer). Syftet med serving layer är att leverera bearbetad(aggregerad/berikad), strukturerad och affärs ready data till stakeholders/end users, BI-verktyg(Business intelligence) eller ML modeller.
 
