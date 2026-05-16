@@ -102,4 +102,13 @@ github-data-lake/
 2. Kör `uv sync` för att bygga miljön
 3. Snurra upp Kafka-klustret med `docker compose up -d`
 
+### Grafana DuckDB Plugin (manuell installation krävs)
+
+Pluginet `motherduck-duckdb-datasource` finns inte i Grafanas officiella
+registry och ingår inte i repot (binärfil, ~300MB). Ladda ner det manuellt:
+
+1. Gå till https://github.com/motherduckdb/grafana-duckdb-datasource/releases/tag/v0.4.0
+2. Ladda ner `motherduck-duckdb-datasource-v0.4.0.linux_amd64.zip`
+3. Packa upp till `serving/grafana/plugins/motherduck-duckdb-datasource/`
+
 ## TODO: Fylla i resten av README.md
