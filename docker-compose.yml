@@ -203,33 +203,22 @@ services:
 
   # ======== Grafana dashboard ========
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:latest-ubuntu
     container_name: grafana
     ports:
       - "3000:3000"   # Port 3000. Grafana UI nås på localhost:3000
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}         # Får info direkt ifrån .gitignored .env fil
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD} # Får info direkt ifrån .gitignored .env fil
-      # GF_INSTALL_PLUGINS laddar ner och installerar plugin vid containers start
-      # Samma mekanism som pip install, men inbyggd i Grafana-imagen
-      GF_INSTALL_PLUGINS: marcusolsson-duckdb-datasource
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: motherduck-duckdb-datasource
     volumes:
-      # Named volume för Grafanas interna state (sessions, cache, intern DB)
-      # Lever kvar mellan omstarter precis som Postgres datan
       - grafana_data:/var/lib/grafana
-
-      # Read-only mount av data/-mappen. Grafana ska läsa DuckDB och ALDRIG skriva.
-      # :ro är en säkerhetsprincip: minsta möjliga privilegium(least privilege principle)
       - ./data:/app/data:ro
-
-      # Provisioning filerna mountas till Grafanas förväntade sökvägar
       - ./serving/grafana/provisioning:/etc/grafana/provisioning
-
-      # Dashboard JSON filerna mountas separat så de är lätta att hitta och redigera
       - ./serving/grafana/dashboards:/etc/grafana/dashboards
-
+      - ./serving/grafana/plugins/motherduck-duckdb-datasource:/var/lib/grafana/plugins/motherduck-duckdb-datasource
     depends_on:
-      - airflow-webserver # Startar EFTER Airflow är uppe!
+      - airflow-webserver
     restart: unless-stopped
   
 
