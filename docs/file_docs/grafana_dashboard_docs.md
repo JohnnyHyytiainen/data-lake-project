@@ -36,3 +36,12 @@ Error: ✗ invalid service state: Failed, expected: Terminated, failure: invalid
 Anledning: 
 
 `marcusolsson-duckdb-datasource` existerar inte längre i `grafanas` officiella plugin registry. Det var ett plugin byggt av Marcus Olsson som ett community projekt men DuckDB plugin är nu byggt och underhålls av `MotherDuck`, företaget bakom cloud baserade `DuckDB`-tjänsten. Plugin'et heter nu istället `motherduck-duckdb-datasource`. Liknande issue jag stötte på när jag skulle få dbt att lira (Se `Dockerfile.dbt` och `ghcr.io`).
+
+# Hur grafana dashboard byggs upp och JSON strukturen kring att bygga dashboarden.
+Vad JSON strukturen faktiskt gör och de tre viktigaste koncept i `de_community.json`-filen som är viktiga att förstå och träna mer på: 
+
+- Varje panel har en `gridPos` som definierar position och storlek i Grafanas 24-kolumners rutnät. Panel 1 är 24 kolumner bred och tar hela bredden. Panel 2 och 3 är 12 kolumner vardera och sitter bredvid varandra på rad två. Det är hela layouten, inga pixlar, bara rutnätskoordinater.  
+
+- `targets` är arrayen av SQL queries som panelen kör. En panel kan ha flera queries (A, B, C...) och kombinera resultaten. Än så länge har mina tre paneler endast en query var.
+
+- `transformations` på den första panelen är viktig att förstå. Min SQL returnerar data i long format, dvs tre kolumner som är: `time`, `repo_name`, `cumulative_stars`. En rad, per repo, per vecka. Grafanas `timeseries-panel` förväntar sig wide format. Alltså en kolumn per repo. `prepareTimeSeries`-transformationen konverterar automatiskt från long till wide, så varje repo blir en egen linje utan att jag behöver bråka med att pivota i SQL.
