@@ -27,3 +27,12 @@ Att `DuckDB` är Single-writer innebär så som jag förstått det(behöver läs
 
 Men värt att ha med och se över när allting lirar: I ett produktionsystem skulle man lösa det med en read replica eller genom att exportera Gold till ett read-optimerat format om jag förstått det rätt(även här behöver jag fylla på MER information och skriva ner för att verkligen förstå skillnader, fördelar/nackdelar)
 
+## Issues med Grafana container i min Compose-stack
+Issue nr 1 vid `docker-compose up grafana -d` är detta:
+```
+Error: ✗ invalid service state: Failed, expected: Terminated, failure: invalid service state: Failed, expected: Running, failure: not healthy, 0 terminated, 1 failed: [starting module plugin.backgroundinstaller: invalid service state: Failed, expected: Running, failure: failed to install plugin marcusolsson-duckdb-datasource@: 404: Plugin not found]
+```
+
+Anledning: 
+
+`marcusolsson-duckdb-datasource` existerar inte längre i `grafanas` officiella plugin registry. Det var ett plugin byggt av Marcus Olsson som ett community projekt men DuckDB plugin är nu byggt och underhålls av `MotherDuck`, företaget bakom cloud baserade `DuckDB`-tjänsten. Plugin'et heter nu istället `motherduck-duckdb-datasource`. Liknande issue jag stötte på när jag skulle få dbt att lira (Se `Dockerfile.dbt` och `ghcr.io`).
