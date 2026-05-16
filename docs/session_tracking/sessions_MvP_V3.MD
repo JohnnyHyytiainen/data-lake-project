@@ -79,10 +79,15 @@
 
 **Saturday 16/05-2026**
 *Goals for today:*
+
+- Write own docs regarding `Grafana` and its purpose for better understanding.
+    - **Done**
+
+
 - Setup Grafana dashboard, get it to working despite not supporting `DuckDB` natively.
     - *ongoing*
 
-    
+
 - Containerise `grafana` and get it to work within my container(Update `Docker-compose.yml`)
     - *ongoing*
 
