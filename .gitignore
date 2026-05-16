@@ -117,3 +117,6 @@ kafka-logs/
 
 # --- GitHub Archive bootstrap ---
 *.json.gz                           # Komprimerade GH Archive-filer
+
+# --- Grafana Plugins --- 
+serving/grafana/plugins/            # För stor plugin för att committa till Github.
