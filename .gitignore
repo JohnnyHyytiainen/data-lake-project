@@ -119,4 +119,4 @@ kafka-logs/
 *.json.gz                           # Komprimerade GH Archive-filer
 
 # --- Grafana Plugins --- 
-serving/grafana/plugins/motherduck-duckdb-datasource # För stor plugin för att committa till Github.
+serving/grafana/plugins/
