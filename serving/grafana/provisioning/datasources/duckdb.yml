@@ -2,6 +2,7 @@ apiVersion: 1
 datasources:
   - name: DuckDB – GitHub Lake
     type: motherduck-duckdb-datasource    # <--- ÄNDRAT: nytt namn
+    uid: github-lake-duckdb               # <--- Fast UID som dashboard JSON kan referrera till
     access: proxy
     isDefault: true
     jsonData:
