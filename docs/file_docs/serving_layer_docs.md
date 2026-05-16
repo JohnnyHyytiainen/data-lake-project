@@ -26,7 +26,7 @@ Serving layer eller visningslagret/serveringslager är oftast den sista delen i 
 
 - Det minskar belastningen och ska ej sköta tunga lyft, det sker i tidigare lager. Se punkt ovan, OPTIMERAT för hastighet.  
 
-- 
+## TODO: Fill in rest of info regarding serving layer
 
 -
 

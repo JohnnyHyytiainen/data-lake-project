@@ -181,8 +181,7 @@ services:
     image: apache/airflow:2.10.5-python3.12
     container_name: airflow-webserver
     command: airflow webserver
-    ports:
-      # Port 8080 är redan tagen av Spark Web UI, därför 8081 här.
+    ports:       # Port 8080 är redan tagen av Spark Web UI, därför 8081 här.
       - "8081:8080"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -201,9 +200,32 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # ======== Grafana dashboard ========
+  grafana:
+    image: grafana/grafana:latest-ubuntu
+    container_name: grafana
+    ports:
+      - "3000:3000"   # Port 3000. Grafana UI nås på localhost:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}         # Får info direkt ifrån .gitignored .env fil
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD} # Får info direkt ifrån .gitignored .env fil
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: motherduck-duckdb-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./data:/app/data:ro
+      - ./serving/grafana/provisioning:/etc/grafana/provisioning
+      - ./serving/grafana/dashboards:/etc/grafana/dashboards
+      - ./serving/grafana/plugins/motherduck-duckdb-datasource:/var/lib/grafana/plugins/motherduck-duckdb-datasource
+    depends_on:
+      - airflow-webserver
+    restart: unless-stopped
+  
+
       
 volumes:
   postgres_data:
+  grafana_data:
 
 networks:
   default:

@@ -66,7 +66,7 @@
 **Thusday 07/05-2026**  
 *Goals for today:*  
 - Refactor `bronze_to_silver.py`-script, optimize its writing to avoid I/O bottlenecks when writing files. Need to write less files from events and not just 1 by 1. Bunch several files together and write one file. One file per each day from bronze -> Silver could be enough?
-    - *ongoing*
+    - **Done**
 
 - Mount `checkpoint`-file to not need to read in ALL files once more when running Airflow DAGs.
     - *ongoing*
@@ -75,7 +75,18 @@
 **Wednesday 13/05-2026**
 *Goals for today:*
 - Start working on serving layer with `Grafana`-dashboard and get it working.
+    - **Done**
+
+**Saturday 16/05-2026**
+*Goals for today:*
+
+- Write own docs regarding `Grafana` and its purpose for better understanding.
+    - **Done**
+
+
+- Setup Grafana dashboard, get it to working despite not supporting `DuckDB` natively.
     - *ongoing*
+
 
 - Containerise `grafana` and get it to work within my container(Update `Docker-compose.yml`)
     - *ongoing*
