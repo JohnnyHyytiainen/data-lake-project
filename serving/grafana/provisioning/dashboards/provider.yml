@@ -3,6 +3,6 @@ providers:
   - name: DE Community Dashboards
     type: file
     disableDeletion: true      # Förhindrar att UI-raderingar raderar filen från disk
-    updateIntervalSeconds: 30  # Grafana kollar efter uppdaterade JSON-filer var 30 sekund
+    updateIntervalSeconds: 30  # Grafana kollar efter uppdaterade JSON-filer var 30:e sekund
     options:
       path: /etc/grafana/dashboards
