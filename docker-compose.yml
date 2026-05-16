@@ -181,8 +181,7 @@ services:
     image: apache/airflow:2.10.5-python3.12
     container_name: airflow-webserver
     command: airflow webserver
-    ports:
-      # Port 8080 är redan tagen av Spark Web UI, därför 8081 här.
+    ports:       # Port 8080 är redan tagen av Spark Web UI, därför 8081 här.
       - "8081:8080"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -201,9 +200,43 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # ======== Grafana dashboard ========
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"   # Port 3000. Grafana UI nås på localhost:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}         # Får info direkt ifrån .gitignored .env fil
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD} # Får info direkt ifrån .gitignored .env fil
+      # GF_INSTALL_PLUGINS laddar ner och installerar plugin vid containers start
+      # Samma mekanism som pip install, men inbyggd i Grafana-imagen
+      GF_INSTALL_PLUGINS: marcusolsson-duckdb-datasource
+    volumes:
+      # Named volume för Grafanas interna state (sessions, cache, intern DB)
+      # Lever kvar mellan omstarter precis som Postgres datan
+      - grafana_data:/var/lib/grafana
+
+      # Read-only mount av data/-mappen. Grafana ska läsa DuckDB och ALDRIG skriva.
+      # :ro är en säkerhetsprincip: minsta möjliga privilegium(least privilege principle)
+      - ./data:/app/data:ro
+
+      # Provisioning filerna mountas till Grafanas förväntade sökvägar
+      - ./serving/grafana/provisioning:/etc/grafana/provisioning
+
+      # Dashboard JSON filerna mountas separat så de är lätta att hitta och redigera
+      - ./serving/grafana/dashboards:/etc/grafana/dashboards
+
+    depends_on:
+      - airflow-webserver # Startar EFTER Airflow är uppe!
+    restart: unless-stopped
+  
+
       
 volumes:
   postgres_data:
+  grafana_data:
 
 networks:
   default:
