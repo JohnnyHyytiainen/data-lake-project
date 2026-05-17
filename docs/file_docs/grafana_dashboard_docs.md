@@ -48,7 +48,7 @@ Vad JSON strukturen faktiskt gör och de tre viktigaste koncept i `de_community.
 
 
 ---
-## Grafana dashboarden är up 'n' running.
+## Grafana dashboard activity heatmap.
 Dashboarden fungerar och går att nå via localhost. 1/3 grafer makes sense. 
 - `DE Tool Growth` - Räknar cumulative stars över tid
 - `Community Activity heatmap - hours X weekday` - Ska räkna antal events när DE communityt är aktivt på github.
@@ -169,3 +169,106 @@ ORDER BY hour_of_day ASC
 ```
 
 NOTERA: Ordningen på dagarna i Queryn beror på SPARK vs ISO standard. Spark följer Javas kalenderstandard där `dayofweek()` returnerar 1=sunday, 2=monday... ..., veckan börjar på Söndagen vilket är den amerikanska konventionen. Det är förklarat i mitt `silver_to_gold.py` script. Dock så bör jag cirkulera tillbaka till detta och fixa det, det faktum att jag behövde gå tillbaka till ett script för att komma ihåg sparks interna dagkonvention för att kunna tolka min `Grafana`-graf korrekt är ett tecken på att den konventionen *egentligen* borde ha normaliserats redan i silver eller i gold steget... En väldesignad Pipeline bör inte exponera interna representations detaljer ifrån ett verktyg(`spark` i mitt fall) till konsumenterna längre ner i kedjan. I framtida iterationer av `build_activity_heatmap` hade det varit cleant att lägga till en column som normaliserar till ISO standard DIREKT i PySpark.
+
+## Grafana dashboard pr_cycle_times
+Nu när grafen för heatmappen över NÄR DE communityt är aktivt på GitHub är det dags att ta hand om nästa felande graf, det är grafen som mäter PR cykler och hur lång tid de tar.
+
+För tillfället så är det väldigt missvisande siffror(endast ett repo med siffror, en median på 6h för en PR cykel(från öppning till merged) och det är siffror som är helt off ifrån min egen upplevelse vid egen EDA.)
+
+Felet verkar inte vara ett visualiseringsproblem utan ett **DATAKVALITETSPROBLEM** enligt table view i grafana så berättar det en historia om vad som finns i min Gold table och den "sanningen" är att nästan alla repos har `median_hours = 0`. Det är ett tecken/symptom på att något i `pr_cycle_times`-modellen inte marchar `PR events` korrekt.
+
+För att förstå problemet kör jag denna query i `Grafana` egna `explore` view:
+```sql
+SELECT
+  repo_name,
+  median_hours,
+  p95_hours,
+  pr_count
+FROM pr_cycle_times
+WHERE median_hours > 0
+ORDER BY median_hours DESC
+```
+
+Efter denna query ser jag klart och tydligt detta:
+
+| repo_name | median_hours | p95_hours | pr_count |
+|:-------:|:-------:|:--------:|:--------:| 
+| DS219/spark-seprep | 3361 | 3887 | 29 | 
+| specmatic/specmatic-kafka-avro-sample | 2862 | 2868 |9 | 
+| Chisanan232/abe-kafka | 622 | 851 | 5 |
+| zncdatadev/airflow-operator | 556 | 1195 | 7 | 
+
+Så datan finns där från första början. Det är bara HUR jag bygger min query för att visualisera datan tror jag.
+För att dubbelkolla allting och se hur många repos MED data och UTAN data gör jag denna query:
+
+```sql
+SELECT
+    COUNT(*) AS total_repos,
+    COUNT(CASE WHEN median_hours > 0 THEN 1 END) AS repos_with_data,
+    COUNT(CASE WHEN medial_hours = 0 THEN 1 END) AS repos_with_zero_data
+FROM pr_cycle_times
+```
+
+Efter denna query ser jag klart och tydligt att det finns data. Det som syns är detta:
+
+| total_repos | repos_with_data| repos_with_zero_data |
+|:-------:|:-------:|:--------:|
+| 448 | 195 | 253 | 
+
+Så datan finns där, det är nu bekräftat.
+
+Felet är dock den query jag gör i `Grafana` som är denna:
+```sql
+SELECT repo_name, 
+    CAST(median_hours AS DOUBLE) AS median_hours, 
+    CAST(p95_hours AS DOUBLE) AS p95_hours 
+FROM pr_cycle_times 
+ORDER BY median_hours ASC 
+LIMIT 15
+```
+Vart är felet jag gör här? Jag sorterar stigande och tar de 15 första, vilket innebär att jag **ALLTID** plockar de 15 repos som har *LÄGST* median och de lägsta värden i min tabell är *ALLA* 253 repos med `median_hours = 0`. Jag har alltså byggt en query som är *GARANTERAD* att visa de mest ointressanta repos i hela mitt dataset... Grafen visar exakt det jag bad om i min query. 
+
+- **SKILLNADEN** med vad jag BAD om VS vad jag MENADE är på två olika sidor av spektrumet. Jag tänkte inte, var för snabb och la till `Order BY _ ASC` för att se mest resultat men jag tänkte inte igenom hela logiken innan jag gick vidare.
+
+Lösningen är denna query i `Grafana` som ersätter den ovan:
+```sql
+SELECT
+    repo_name,
+    CAST(median_hours AS DOUBLE) AS median_hours,
+    CAST(p95_hours AS DOUBLE) AS p95_hours
+FROM pr_cycle_times
+WHERE median_hours > 0      -- filtrera bort repos UTAN matchande PR pairs
+ORDER BY median_hours DESC   -- KORTAST cykeltid överst = snabbast review "culture" DESC för längst review "culture"
+LIMIT 15
+```
+Lösningen blev väldigt bra, mer talande information med `DESC` istället för `ASC`. Bör införa två olika grafer för att se både kortast cykel-tid från skapat PR -> merged och längst PR cykel så som queryn ovan visar.
+
+---
+
+# Skillnaden i pr_cycle_times queryn och VARFÖR den är viktig.
+Vad berättar `median_hours` & `p95_hours` och varför **median** inte räcker hela vägen för att representera datan:
+Frågan och skillnaden att förstå på `median_hours` och `p95_hours` är denna:
+
+Tänk dessa siffror: 
+- 2, 3, 2, 4, 2, 3, 3, 2, 4, 168.  
+Vad är `medianen` av dom här? Jo, medianen är 3.
+- 2, 2, 2, 2, 3, 3, 3, 4, 4, 168.  Siffra nr 5+6, meddelvärdet av siffra 5 & 6 är 3 i det här fallet. Alltså är medianen för det repots PR cykler 3 timmar. Det "verkar" som ett välskött repo med snabb review culture. MEN den sista PR'en tog 168h, dvs en HEL vecka. Det är en PR som glömdes bort, blockerades av något eller fastnade pga någon anledning. `Medianen` döljer den historiken **helt**.
+
+P95 berättar en helt annan historia än bara Medianen kan:
+`p95_hours` berättar för en att, "Om jag sorterar alla cykeltider från kortast till längst, vad är då värdet vid position 95% i listan?". I praktiken betyder det att '95% av alla PRs i det här repot stängs snabbare än det här värdet". Det är inte top 5% av de *bästa* PR's utan gränsen där de *5% "sämsta" börjar*. `p95_hours` fångar med andra ord alla de 'jobbiga' outliers utan att låta dom dominera **hela** bilden som enbart ett *medelvärde* hade gjort.
+
+Kombinationen av **median** + **p95** och varför det är kraftfullt:
+Just den här kombinationen som analytiskt värde är väldigt kraftfullt. Speciellt om en tittar på [den här bilden](../visuals/grafana_visuals/pr_cycle_times_v2_fixed.png). Tittar man på `apache/flink-cdc` och den gröna(median) baren så är den liten och sitter nära noll medan den gula (p95) sträcker sig till nästan **24 veckor**. Det berättar en historia. De *flesta* `PR`'s i `flink-cdc` mergas snabbt *men* det finns en liten kategori PR's som tar **månader**.
+
+Såna typer av PR cykler kan vara t.ex:
+- Stora feature-branches.
+- RFC-discussions (request for comments).
+- PR's som öppnats och sedan övergivits.
+
+Jämför detta med `DS219/spark-seprep` [här](../visuals/grafana_visuals/pr_cycle_times_v2_fixed.png) övers i grafen. Här är *både* median och p95 lång. Det är ett repo där PR cykeln konsekvent tar väldigt lång tid, inte bara ibland. Det är en helt annan karaktär på det repot.
+
+Skillnaden mellan ett centralmått och spridningsmått är viktigt att förstå. I just detta fall och i det här projektet är det väldigt viktigt att ha med både: 
+
+- **centralmåttet**, ett värde som används för att hitta ett representativt "middle value", så som median, medelvärde, eller typvärde.
+
+- **spridningsmåttet**, ett värde som *beskriver* spridningen eller *variationen* i datan. Det förklarar t.ex variationsbredden, standardavvikelse, varians.
