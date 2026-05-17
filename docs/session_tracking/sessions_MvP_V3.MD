@@ -102,7 +102,7 @@
     - **Done**
 
 - Clean up repo, update Roadmap, brainstorm upcoming MVP versions
-    - *ongoing*
+    - **Done**
 
 - 
 
