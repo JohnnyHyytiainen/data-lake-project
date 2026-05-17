@@ -9,6 +9,7 @@
 - Write docs regarding `Spark` and `docker-compose`, `dbt` and `Airflow`
     - **Done**
 
+---
 **Sunday 19/04-2026**
 *Goals for today:*
 - Get all set up for scripts. That will include:
@@ -27,7 +28,7 @@
 - Write own docs/notes regarding `dbt` and `DuckDB` + `tool_growth.sql` script
     - **Done**
 
-
+---
 **Monday 20/04-2026**
 *Goals for today:*
 - Start writing on my `activity_heatmap.sql` and `pr_cycle_times.sql` dbt marts.
@@ -36,6 +37,7 @@
 - Write own docs/notes regarding `activity_heatmap.sql`, `pr_cycle_times.sql` and more details about `dbt`
     - *ongoing*
 
+---
 **Wednesday 22/04-2026**
 *Goals for today:*
 - Containerise DBT in Docker and test it to make sure everything runs smoothly.
@@ -44,7 +46,7 @@
 - Write more comprehensive docs regarding docker and dbt. More theory is needed.
     - *ongoing*
 
-
+---
 **Friday 01/05, Saturday 02/05, Sunday 03/05-2026**
 *Goals for weekend:*
 - Setup Airflow DAG
@@ -62,7 +64,7 @@
 - Start working on serving layer with `grafana`
     - *Ongoing* 
 
-
+---
 **Thusday 07/05-2026**  
 *Goals for today:*  
 - Refactor `bronze_to_silver.py`-script, optimize its writing to avoid I/O bottlenecks when writing files. Need to write less files from events and not just 1 by 1. Bunch several files together and write one file. One file per each day from bronze -> Silver could be enough?
@@ -71,12 +73,13 @@
 - Mount `checkpoint`-file to not need to read in ALL files once more when running Airflow DAGs.
     - *ongoing*
 
-
+---
 **Wednesday 13/05-2026**
 *Goals for today:*
 - Start working on serving layer with `Grafana`-dashboard and get it working.
     - **Done**
 
+---
 **Saturday 16/05-2026**
 *Goals for today:*
 
@@ -85,14 +88,25 @@
 
 
 - Setup Grafana dashboard, get it to working despite not supporting `DuckDB` natively.
-    - *ongoing*
+    - **Done**
 
 
 - Containerise `grafana` and get it to work within my container(Update `Docker-compose.yml`)
-    - *ongoing*
+    - **Done**
 
 --- 
+**Sunday 17/05-2026**
+*Goals for today:*
 
+- Get `Grafana`-graphs to show correct values (`activity heatmap` + `pr cycle times`)
+    - *ongoing*
+
+- Clean up repo, update Roadmap, brainstorm upcoming MVP versions
+    - *ongoing*
+
+- 
+
+---
 
 - Start planning on next steps for MVP v4 and beyond.
     - More questions that needs to be answered from the data.
