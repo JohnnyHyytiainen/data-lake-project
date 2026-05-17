@@ -99,10 +99,10 @@
 *Goals for today:*
 
 - Get `Grafana`-graphs to show correct values (`activity heatmap` + `pr cycle times`)
-    - *ongoing*
+    - **Done**
 
 - Clean up repo, update Roadmap, brainstorm upcoming MVP versions
-    - *ongoing*
+    - **Done**
 
 - 
 

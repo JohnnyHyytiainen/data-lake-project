@@ -45,3 +45,230 @@ Vad JSON strukturen faktiskt gör och de tre viktigaste koncept i `de_community.
 - `targets` är arrayen av SQL queries som panelen kör. En panel kan ha flera queries (A, B, C...) och kombinera resultaten. Än så länge har mina tre paneler endast en query var.
 
 - `transformations` på den första panelen är viktig att förstå. Min SQL returnerar data i long format, dvs tre kolumner som är: `time`, `repo_name`, `cumulative_stars`. En rad, per repo, per vecka. Grafanas `timeseries-panel` förväntar sig wide format. Alltså en kolumn per repo. `prepareTimeSeries`-transformationen konverterar automatiskt från long till wide, så varje repo blir en egen linje utan att jag behöver bråka med att pivota i SQL.
+
+
+---
+## Grafana dashboard activity heatmap.
+Dashboarden fungerar och går att nå via localhost. 1/3 grafer makes sense. 
+- `DE Tool Growth` - Räknar cumulative stars över tid
+- `Community Activity heatmap - hours X weekday` - Ska räkna antal events när DE communityt är aktivt på github.
+- `Pr Cycle Time - Median & P95` - Ska räkna hur lång tid en typisk PR cykel tar.
+
+För tillfället så är det enbart `Tool growth` grafen som ser förståbar ut. Första jobbet för mig just nu är att fixa till `activity_heatmap` grafen och sen lösa `pr cycle times` grafen. Detta då `Pr cycle` problemet är ett `SQL`-issue i grunden där jag enbart kan filtrera bort outliers eller justera skalan. Min `Activity_heatmap` är däremot en annan fråga, en fråga i hur just `Grafana` tolkar data.
+
+Konceptuell utmaning att förstå: Min `Activity_heatmap` tabell returnerar 3x kolumner, dessa är: `day_of_week`(Ett tal på 0-6/1-7), `hour_of_day`(0-23) och `event_count`(antal github events dag X och timme Y). Problemet jag står för nu är nog att `Grafana` inte vet hur den ska tolka `day_of_week` och `hour_of_day`.
+
+
+Just nu så ser min tabell för heatmappen ut så här:
+```
+day_of_week | hour_of_day | event_count
+0           | 0           | 423
+0           | 1           | 387
+0           | 2           | 290
+...
+6           | 23          | 891
+```
+
+^ Tabellen ser ut så här för att min query returnerar datan i long format, det här är "long format" om jag uppfattat det rätt. Varje rad är en observation med tre kolumner. `Grafana` förväntar sig dock något i *WIDE FORMAT* och inte long format. Varje dag bör vara sin egen kolumn och varje rad bör representera en timme på dygnet. Ungefär så här:
+
+```
+hour_of_day | Mån   | Tis   | Ons   | 
+0           | 423   | 387   | 290   | 
+1           | 312   | 445   | 501   | 
+```
+
+För att jag ska kunna omvandla från Long till Wide behöver jag göra en `pivot-operation`. Det går att ordna på två sätt. En med `DuckDBs` inbyggda `PIVOT` syntax eller med en transformation i `grafana`-ui't. Jag bör dock göra det med SQL då en dashboard ej ska stå för några tunga lyft öht.
+
+Lösningen bör vara detta:
+```sql
+PIVOT (
+    SELECT
+        hour_of_day,
+        -- Gör dagarna läsbara istället för 0-6
+        CASE day_of_week
+            WHEN 0 THEN '1_Mon'
+            WHEN 1 THEN '2_Tue'
+            WHEN 2 THEN '3_Wed'
+            WHEN 3 THEN '4_Thu'
+            WHEN 4 THEN '5_Fri'
+            WHEN 5 THEN '6_Sat'
+            WHEN 6 THEN '7_Sun'
+        END AS weekday,
+        event_count
+    FROM activity_heatmap
+)
+ON weekday
+USING SUM(event_count)
+GROUP BY hour_of_day
+ORDER BY hour_of_day ASC
+```
+
+Att använda `1_`, `2_` prefix framför dagarna är en liten men viktig detalj. Jag vill ordna alla veckodagar så som vi människor läser dom, alltså från Måndag->Onsdag->Söndag annars blir det krångligt och onödigt jobbigt att behöva organisera allting i minnet. Med prefixet 1...2...6...7 före så blir det mycket enklare att se ordningen och följa flödet hela veckan.
+
+Lösningen ovan var naiv, det returnerade felkod: `sql: Scan error on column index 1, name "2_Tue": unsupported Scan, storing driver.Value type *big.Int into type *string: Could not process SQL results` i `Grafana`. En annan lösning behövs.
+
+Efter att ha googlat runt och försökt hitta lösningar och rådfrågat C kring lösning så föreslog C att jag wrappar min `PIVOT` i en `subquery`. Med förklaringen att låta `PIVOT` göra sitt jobb inne i en `subquery` och sen i det yttre lagret `CAST`a varje kolumn till en type som GO-drivrutinerna förstår. Samma "princip" som ett medallion layer i miniatyr. Dvs, varje lager har **ett** specifikt ansvar och `type converting` är det yttre lagrets ansvar. Queryn bör se ut något liknande denna:
+
+```sql
+SELECT
+    hour_of_day,
+    -- Castar varje dag-kolumn från HUGEINT till INTEGER
+    -- INTEGER (32-bit) bör räcka för event-räkningen per timme
+    CAST("1_Mon" AS INTEGER) AS "1_Mon",
+    CAST("2_Tue" AS INTEGER) AS "2_Tue",
+    CAST("3_Wed" AS INTEGER) AS "3_Wed",
+    CAST("4_Thu" AS INTEGER) AS "4_Thu",
+    CAST("5_Fri" AS INTEGER) AS "5_Fri",
+    CAST("6_Sat" AS INTEGER) AS "6_Sat",
+    CAST("7_Sun" AS INTEGER) AS "7_Sun"
+FROM (
+    -- Inner query: PIVOT gör long till wide omvandlingen
+    PIVOT (
+        SELECT
+            hour_of_day,
+            CASE day_of_week
+                WHEN 0 THEN '1_Mon'
+                WHEN 1 THEN '2_Tue'
+                WHEN 2 THEN '3_Wed'
+                WHEN 3 THEN '4_Thu'
+                WHEN 4 THEN '5_Fri'
+                WHEN 5 THEN '6_Sat'
+                WHEN 6 THEN '7_Sun'
+            END AS weekday,
+            event_count
+        FROM activity_heatmap
+    )
+    ON weekday
+    USING SUM(event_count)
+    GROUP BY hour_of_day
+)
+ORDER BY hour_of_day ASC
+```
+Vilket ej fungerade heller. Anledning: `error querying the database: Binder Error: Column "1_Mon" referenced that exists in the SELECT clause - but this column cannot be referenced before it is defined`-felkod.
+
+`DuckDB` verkar inte tillåta att `PIVOT` resultatets columns wrappas i ett yttre `SELECT`-statement. Efter lite mer research och frustration stötte jag på något som kallas för: `conditional aggregation`, ett SQL pattern som vad jag förstått det gör nästan exakt samma sak som `PIVOT` men utan att förlita sig för `DuckDB`-specifik dialekt. 
+
+**Konceptet bakom conditional aggregation** så som jag förstått det är detta:
+Grundtanken är "enkel". Istället för att låta databasen automatiskt skapa columns från rad värden så skapar jag varje kolumn manuellt med en `CASE WHEN`-sats inne i en `aggregerings funktion`. Dvs, Varje kolumn säger i princip "Summera `event_count` men bara för de rader där `day_of_week` är det här *specifika* värdet, annars räkna noll. Det är en `Pivot`-operation uttryckt i standard `SQL` och bör se ut så här:
+
+```sql
+SELECT
+    hour_of_day,
+    -- Varje dag blir en egen column via CASE WHEN + SUM
+    -- CAST direkt här, ingen subquery behövs.
+    CAST(SUM(CASE WHEN day_of_week = 0 THEN event_count ELSE 0 END) AS INTEGER) AS "Sunday",
+    CAST(SUM(CASE WHEN day_of_week = 1 THEN event_count ELSE 0 END) AS INTEGER) AS "Monday",
+    CAST(SUM(CASE WHEN day_of_week = 2 THEN event_count ELSE 0 END) AS INTEGER) AS "Tuesday",
+    CAST(SUM(CASE WHEN day_of_week = 3 THEN event_count ELSE 0 END) AS INTEGER) AS "Wednesday",
+    CAST(SUM(CASE WHEN day_of_week = 4 THEN event_count ELSE 0 END) AS INTEGER) AS "Thursday",
+    CAST(SUM(CASE WHEN day_of_week = 5 THEN event_count ELSE 0 END) AS INTEGER) AS "Friday",
+    CAST(SUM(CASE WHEN day_of_week = 6 THEN event_count ELSE 0 END) AS INTEGER) AS "Saturday"
+FROM activity_heatmap
+GROUP BY hour_of_day
+ORDER BY hour_of_day ASC
+```
+
+NOTERA: Ordningen på dagarna i Queryn beror på SPARK vs ISO standard. Spark följer Javas kalenderstandard där `dayofweek()` returnerar 1=sunday, 2=monday... ..., veckan börjar på Söndagen vilket är den amerikanska konventionen. Det är förklarat i mitt `silver_to_gold.py` script. Dock så bör jag cirkulera tillbaka till detta och fixa det, det faktum att jag behövde gå tillbaka till ett script för att komma ihåg sparks interna dagkonvention för att kunna tolka min `Grafana`-graf korrekt är ett tecken på att den konventionen *egentligen* borde ha normaliserats redan i silver eller i gold steget... En väldesignad Pipeline bör inte exponera interna representations detaljer ifrån ett verktyg(`spark` i mitt fall) till konsumenterna längre ner i kedjan. I framtida iterationer av `build_activity_heatmap` hade det varit cleant att lägga till en column som normaliserar till ISO standard DIREKT i PySpark.
+
+## Grafana dashboard pr_cycle_times
+Nu när grafen för heatmappen över NÄR DE communityt är aktivt på GitHub är det dags att ta hand om nästa felande graf, det är grafen som mäter PR cykler och hur lång tid de tar.
+
+För tillfället så är det väldigt missvisande siffror(endast ett repo med siffror, en median på 6h för en PR cykel(från öppning till merged) och det är siffror som är helt off ifrån min egen upplevelse vid egen EDA.)
+
+Felet verkar inte vara ett visualiseringsproblem utan ett **DATAKVALITETSPROBLEM** enligt table view i grafana så berättar det en historia om vad som finns i min Gold table och den "sanningen" är att nästan alla repos har `median_hours = 0`. Det är ett tecken/symptom på att något i `pr_cycle_times`-modellen inte marchar `PR events` korrekt.
+
+För att förstå problemet kör jag denna query i `Grafana` egna `explore` view:
+```sql
+SELECT
+  repo_name,
+  median_hours,
+  p95_hours,
+  pr_count
+FROM pr_cycle_times
+WHERE median_hours > 0
+ORDER BY median_hours DESC
+```
+
+Efter denna query ser jag klart och tydligt detta:
+
+| repo_name | median_hours | p95_hours | pr_count |
+|:-------:|:-------:|:--------:|:--------:| 
+| DS219/spark-seprep | 3361 | 3887 | 29 | 
+| specmatic/specmatic-kafka-avro-sample | 2862 | 2868 |9 | 
+| Chisanan232/abe-kafka | 622 | 851 | 5 |
+| zncdatadev/airflow-operator | 556 | 1195 | 7 | 
+
+Så datan finns där från första början. Det är bara HUR jag bygger min query för att visualisera datan tror jag.
+För att dubbelkolla allting och se hur många repos MED data och UTAN data gör jag denna query:
+
+```sql
+SELECT
+    COUNT(*) AS total_repos,
+    COUNT(CASE WHEN median_hours > 0 THEN 1 END) AS repos_with_data,
+    COUNT(CASE WHEN medial_hours = 0 THEN 1 END) AS repos_with_zero_data
+FROM pr_cycle_times
+```
+
+Efter denna query ser jag klart och tydligt att det finns data. Det som syns är detta:
+
+| total_repos | repos_with_data| repos_with_zero_data |
+|:-------:|:-------:|:--------:|
+| 448 | 195 | 253 | 
+
+Så datan finns där, det är nu bekräftat.
+
+Felet är dock den query jag gör i `Grafana` som är denna:
+```sql
+SELECT repo_name, 
+    CAST(median_hours AS DOUBLE) AS median_hours, 
+    CAST(p95_hours AS DOUBLE) AS p95_hours 
+FROM pr_cycle_times 
+ORDER BY median_hours ASC 
+LIMIT 15
+```
+Vart är felet jag gör här? Jag sorterar stigande och tar de 15 första, vilket innebär att jag **ALLTID** plockar de 15 repos som har *LÄGST* median och de lägsta värden i min tabell är *ALLA* 253 repos med `median_hours = 0`. Jag har alltså byggt en query som är *GARANTERAD* att visa de mest ointressanta repos i hela mitt dataset... Grafen visar exakt det jag bad om i min query. 
+
+- **SKILLNADEN** med vad jag BAD om VS vad jag MENADE är på två olika sidor av spektrumet. Jag tänkte inte, var för snabb och la till `Order BY _ ASC` för att se mest resultat men jag tänkte inte igenom hela logiken innan jag gick vidare.
+
+Lösningen är denna query i `Grafana` som ersätter den ovan:
+```sql
+SELECT
+    repo_name,
+    CAST(median_hours AS DOUBLE) AS median_hours,
+    CAST(p95_hours AS DOUBLE) AS p95_hours
+FROM pr_cycle_times
+WHERE median_hours > 0      -- filtrera bort repos UTAN matchande PR pairs
+ORDER BY median_hours DESC   -- KORTAST cykeltid överst = snabbast review "culture" DESC för längst review "culture"
+LIMIT 15
+```
+Lösningen blev väldigt bra, mer talande information med `DESC` istället för `ASC`. Bör införa två olika grafer för att se både kortast cykel-tid från skapat PR -> merged och längst PR cykel så som queryn ovan visar.
+
+---
+
+# Skillnaden i pr_cycle_times queryn och VARFÖR den är viktig.
+Vad berättar `median_hours` & `p95_hours` och varför **median** inte räcker hela vägen för att representera datan:
+Frågan och skillnaden att förstå på `median_hours` och `p95_hours` är denna:
+
+Tänk dessa siffror: 
+- 2, 3, 2, 4, 2, 3, 3, 2, 4, 168.  
+Vad är `medianen` av dom här? Jo, medianen är 3.
+- 2, 2, 2, 2, 3, 3, 3, 4, 4, 168.  Siffra nr 5+6, meddelvärdet av siffra 5 & 6 är 3 i det här fallet. Alltså är medianen för det repots PR cykler 3 timmar. Det "verkar" som ett välskött repo med snabb review culture. MEN den sista PR'en tog 168h, dvs en HEL vecka. Det är en PR som glömdes bort, blockerades av något eller fastnade pga någon anledning. `Medianen` döljer den historiken **helt**.
+
+P95 berättar en helt annan historia än bara Medianen kan:
+`p95_hours` berättar för en att, "Om jag sorterar alla cykeltider från kortast till längst, vad är då värdet vid position 95% i listan?". I praktiken betyder det att '95% av alla PRs i det här repot stängs snabbare än det här värdet". Det är inte top 5% av de *bästa* PR's utan gränsen där de *5% "sämsta" börjar*. `p95_hours` fångar med andra ord alla de 'jobbiga' outliers utan att låta dom dominera **hela** bilden som enbart ett *medelvärde* hade gjort.
+
+Kombinationen av **median** + **p95** och varför det är kraftfullt:
+Just den här kombinationen som analytiskt värde är väldigt kraftfullt. Speciellt om en tittar på [den här bilden](../visuals/grafana_visuals/pr_cycle_times_v2_fixed.png). Tittar man på `apache/flink-cdc` och den gröna(median) baren så är den liten och sitter nära noll medan den gula (p95) sträcker sig till nästan **24 veckor**. Det berättar en historia. De *flesta* `PR`'s i `flink-cdc` mergas snabbt *men* det finns en liten kategori PR's som tar **månader**.
+
+Såna typer av PR cykler kan vara t.ex:
+- Stora feature-branches.
+- RFC-discussions (request for comments).
+- PR's som öppnats och sedan övergivits.
+
+Jämför detta med `DS219/spark-seprep` [här](../visuals/grafana_visuals/pr_cycle_times_v2_fixed.png) övers i grafen. Här är *både* median och p95 lång. Det är ett repo där PR cykeln konsekvent tar väldigt lång tid, inte bara ibland. Det är en helt annan karaktär på det repot.
+
+Skillnaden mellan ett centralmått och spridningsmått är viktigt att förstå. I just detta fall och i det här projektet är det väldigt viktigt att ha med både: 
+
+- **centralmåttet**, ett värde som används för att hitta ett representativt "middle value", så som median, medelvärde, eller typvärde.
+
+- **spridningsmåttet**, ett värde som *beskriver* spridningen eller *variationen* i datan. Det förklarar t.ex variationsbredden, standardavvikelse, varians.
