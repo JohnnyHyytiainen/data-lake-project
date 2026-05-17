@@ -10,13 +10,16 @@ import shutil
 import json
 from datetime import datetime, timezone
 
-# NYTT: PySpark imports
+# PySpark imports
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
-os.environ.setdefault("HADOOP_HOME", r"C:/Program Files/hadoop")
-os.environ["PYSPARK_PYTHON"] = sys.executable
-os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+# Kör enbart på Windows/lokalt, i Docker hanteras Hadoop och Python-paths
+# av containerns miljö och image-konfigurationen.
+if os.name == "nt":
+    os.environ.setdefault("HADOOP_HOME", r"C:/Program Files/hadoop")
+    os.environ["PYSPARK_PYTHON"] = sys.executable
+    os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 
 from config import (
@@ -24,12 +27,9 @@ from config import (
     SILVER_DIR,
     LOG_LEVEL,
     RELEVANT_EVENT_TYPES,
+    BRONZE_SILVER_CHECKPOINT,
+    DLQ_DIR,
 )
-
-# ==== CHECKPOINT-HANTERING ===
-# Checkpoint filen ska leva utanför data folders så den aldrig råkar rensas
-# av shutil.rmtree när jag rensar silver-partitions
-CHECKPOINT_FILE = Path("data/checkpoints/bronze_to_silver.json")
 
 # ========== LOGGING ==========
 logger.remove()
@@ -38,12 +38,6 @@ logger.add(
     level=LOG_LEVEL,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}",
 )
-
-
-# ========== DLQ PATH ==========
-# Dead Letter Queue bor bredvid silver, inte i silver. Oväntad data har sin egen plats
-# så att jag kan inspektera den senare utan att utan att skita ner silver layer
-DLQ_DIR = Path("data/dlq/events")
 
 
 # ========== CHECKPOINT FUNKTIONER ==========
@@ -58,13 +52,14 @@ def _load_checkpoint() -> set[str]:
     with a set, versus O(n) with a list. When you have thousands
     of checkpointed files, this matters a lot.
     """
-    if not CHECKPOINT_FILE.exists():
+    if not BRONZE_SILVER_CHECKPOINT.exists():
         logger.info("No checkpoint found - Will process ALL Bronze files.")
         return set()
 
-    with open(CHECKPOINT_FILE, "r") as f:
+    with open(BRONZE_SILVER_CHECKPOINT, "r") as f:
         data = json.load(f)
-        processed = set(data.get("processed_files", []))
+        relative_paths = set(data.get("processed_files", []))
+        processed = {str(BRONZE_DIR / rel) for rel in relative_paths}
         last_run = data.get("last_run", "unknown")
         logger.info(
             f"Checkpoint loaded | {len(processed)} files already processed | last_run={last_run}"
@@ -79,12 +74,16 @@ def _save_checkpoint(processed_files: set[str]) -> None:
     never before. Same principle as offset-commit in consumer.py:
     data to disk is always priority one.
     """
-    CHECKPOINT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    BRONZE_SILVER_CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(CHECKPOINT_FILE, "w") as f:
+    # Konvertera absoluta paths till relativa paths innan lagring
+    # Path(f).relative_to(BRONZE_DIR) ger t.ex. year=2025/month=11/day=01/abc.parquet
+    relative_paths = [str(Path(f).relative_to(BRONZE_DIR)) for f in processed_files]
+
+    with open(BRONZE_SILVER_CHECKPOINT, "w") as f:
         json.dump(
             {
-                "processed_files": list(processed_files),
+                "processed_files": relative_paths,
                 "last_run": datetime.now(timezone.utc).isoformat(),
             },
             f,
