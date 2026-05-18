@@ -3,11 +3,17 @@
 # DAG ansvarar för Silver transformation och dbt Gold layer.
 # Kommentarer: Svenska
 # Kod: Engelska
-
+import os
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
 from docker.types import Mount
+
+PROJECT_ROOT = os.environ.get("PROJECT_ROOT")
+if not PROJECT_ROOT:
+    raise ValueError(
+        "PROJECT_ROOT is not set. Add it to your .env file and ensure it is passed to the Airflow Scheduler container via docker-compose.yml."
+    )
 
 # Standard argumentet som ärvs av ALLA mina tasks i DAG.
 # Misslyckas en task -> vänta 5 min och försök sen igen. MAX 1 retry
@@ -40,24 +46,24 @@ with DAG(
             "PYTHONPATH": "/app",
         },
         # Mounts som ersätter volumes i DockerOperator, samma logik som volumes i compose
+        working_dir="/app",
         mounts=[
             Mount(
-                source="/c/Users/johnn/Desktop/projekt/data-lake-project/transforms",
+                source=f"{PROJECT_ROOT}/transforms",
                 target="/app/transforms",
                 type="bind",
             ),
             Mount(
-                source="/c/Users/johnn/Desktop/projekt/data-lake-project/data",
+                source=f"{PROJECT_ROOT}/data",
                 target="/app/data",
                 type="bind",
             ),
             Mount(
-                source="/c/Users/johnn/Desktop/projekt/data-lake-project/config.py",
+                source=f"{PROJECT_ROOT}/config.py",
                 target="/app/config.py",
                 type="bind",
             ),
         ],
-        # Container tas bort per automatik när task är klar, likadant som --rm
         mount_tmp_dir=False,
         auto_remove="success",
         docker_url="unix://var/run/docker.sock",
@@ -75,12 +81,12 @@ with DAG(
         },
         mounts=[
             Mount(
-                source="/c/Users/johnn/Desktop/projekt/data-lake-project/dbt",
+                source=f"{PROJECT_ROOT}/dbt",
                 target="/app/dbt",
                 type="bind",
             ),
             Mount(
-                source="/c/Users/johnn/Desktop/projekt/data-lake-project/data",
+                source=f"{PROJECT_ROOT}/data",
                 target="/app/data",
                 type="bind",
             ),

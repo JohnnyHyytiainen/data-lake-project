@@ -15,6 +15,14 @@ DATA_DIR = ROOT_DIR / "data"
 BRONZE_DIR = DATA_DIR / "bronze" / "events"
 SILVER_DIR = DATA_DIR / "silver" / "events"
 GOLD_DIR = DATA_DIR / "gold"
+# Checkpoint path
+CHECKPOINT_DIR = DATA_DIR / "checkpoints"
+BRONZE_SILVER_CHECKPOINT = CHECKPOINT_DIR / "bronze_to_silver.json"
+
+# DLQ path
+# Dead Letter Queue bor bredvid silver, inte i silver. Oväntad data har sin egen plats
+# så att jag kan inspektera den senare utan att utan att skita ner silver layer
+DLQ_DIR = DATA_DIR / "dlq" / "events"
 
 # --- Kafka ---
 # Producer och consumer importerar härifrån, fristående ifrån varandra
