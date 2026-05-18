@@ -30,15 +30,15 @@ en cold run som processar om alla Bronze-filer från grunden vilket är extremt
 onödigt och skapar issues. Ännu mer om jag tänker i kostnadsfrågor i riktig produktion.
 Det är en overhead som kan bli dyr om det inte fixas i prod.
 
-- [ ] Identifiera exakt vilken mount-konfiguration som orsakar problemet
+- [x] Identifiera exakt vilken mount-konfiguration som orsakar problemet
       (logga ut de faktiska sökvägarna som host-Docker försöker mounta)
 
-- [ ] Sätt `PROJECT_ROOT` som absolut sökväg i `.env` och `.env.example`
+- [x] Sätt `PROJECT_ROOT` som absolut sökväg i `.env` och `.env.example`
 
-- [ ] Uppdatera `DockerOperator`-mounts i DAGen att använda `PROJECT_ROOT`
+- [x] Uppdatera `DockerOperator`-mounts i DAGen att använda `PROJECT_ROOT`
       som prefix för alla mount-sökvägar
 
-- [ ] Verifiera att en körning faktiskt läser checkpoint och hoppar över
+- [x] Verifiera att en körning faktiskt läser checkpoint och hoppar över
       redan processade filer (se logg: "X already processed")
 
 - [ ] Dokumentera lösningen i `AC_CTXT` under kända

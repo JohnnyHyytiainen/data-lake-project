@@ -6,6 +6,11 @@
 *Goals for today:*
 
 - Start working on clearing current tech-debt from previous MVP v1-v3.
-    - *ongoing*
+    - Checkpoint file
+        - **Done**
+    - Update testing suite
+        - *ongoing*
+    - Documentation debt in form of serving.mmd flowcharts and write docs regarding checkpoint file fix
+        - *ongoing*
 
     
