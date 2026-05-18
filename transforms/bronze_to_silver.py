@@ -28,7 +28,6 @@ from config import (
     LOG_LEVEL,
     RELEVANT_EVENT_TYPES,
     BRONZE_SILVER_CHECKPOINT,
-    DLQ_DIR,
 )
 
 # ========== LOGGING ==========
