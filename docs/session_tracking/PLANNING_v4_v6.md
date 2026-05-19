@@ -152,7 +152,7 @@ på datanivå.
 Klassificeringskriterier att definiera och motivera (steg 1: namnbaserat):
 - [ ] `actor_login` innehåller `[bot]`, `-bot`, `_bot` (GitHub Apps-mönster)
 - [ ] `actor_login` börjar med `dependabot`, `renovate`, `github-actions`
-- [ ] Dokumentera kriterierna explicit i `ARCHITECTURE_CONTEXT.md`
+- [ ] Dokumentera kriterierna explicit i `AC_CTXT.md`
       *innan* koden skrivs
 
 Möjliga steg 2-kriterier (tidsbeteende-baserat, MVP v5+):
