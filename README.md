@@ -3,11 +3,12 @@
 > **Personal project - Building a scalable data lake to master the data lifecycle, data engineering, and the Medallion architecture.**
 ![Project overview](docs/architecture/overview_data_lake.png)
 
-## Projektets Syfte & Affärsvärde
-För att spåra trender inom Data Engineering-verktyg bygger denna pipeline insikter från GitHubs "brandslang av live-events". Projektet demonstrerar en end-to-end pipeline från rådata (Kafka) till validerad historik (Parquet) och analytiska vyer (dbt/PySpark).
+## Project Purpose & Business Value
 
+To track and analyze trends within Data Engineering tools, this pipeline extracts actionable insights from the "firehose" of GitHub live events. The project demonstrates a complete end-to-end pipeline: from streaming raw data (Kafka) to validated historical storage (Parquet), and finally into analytical views (dbt/PySpark).
 
-## Projektstruktur & MVP Roadmap
+## Project Structure & MVP Roadmap
+
 ```text
 github-data-lake/
 │
@@ -18,12 +19,12 @@ github-data-lake/
 ├── ingestion/
 │   ├── __init__.py
 │   ├── producer.py                       # GitHub API → Kafka topic
-│   └── consumer.py                       # Kafka → Bronze (Parquet på disk)
+│   └── consumer.py                       # Kafka → Bronze (Parquet on disk)
 │
 ├── transforms/
 │   ├── __init__.py
-│   ├── bronze_to_silver.py               # PySpark: rådata → validerad
-│   └── silver_to_gold.py                 # PySpark: validerad → aggregerad
+│   ├── bronze_to_silver.py               # PySpark: Raw data → Validated
+│   └── silver_to_gold.py                 # PySpark: Validated → Aggregated
 │
 ├── dbt/                                  # MVP v3
 │   ├── dbt_project.yml
@@ -32,9 +33,9 @@ github-data-lake/
 │       ├── staging/
 │       │   └── stg_github_events.sql
 │       └── marts/
-│           ├── tool_growth.sql           # Vilka DE-verktyg växer snabbast?
-│           ├── activity_heatmap.sql      # När är communityt aktivt?
-│           └── pr_cycle_times.sql        # Hur lång är en typisk PR-cykel?
+│           ├── tool_growth.sql           # Which DE tools are growing the fastest?
+│           ├── activity_heatmap.sql      # When is the community most active?
+│           └── pr_cycle_times.sql        # What is the median PR cycle time?
 │
 ├── orchestration/                        # MVP v3
 │   └── dags/
@@ -45,12 +46,12 @@ github-data-lake/
 │       └── dashboards/
 │           └── de_community.json
 │
-├── data/                                 # Gitignorerad i helhet (se .gitignore)
+├── data/                                 # Gitignored entirely (see .gitignore)
 │   ├── bronze/
 │   │   └── events/
 │   │       └── year=2025/
 │   │           └── month=01/
-│   │               └── day=15/           # Hive-style partitionering
+│   │               └── day=15/           # Hive-style partitioning
 │   │                   └── *.parquet
 │   ├── silver/
 │   │   └── events/
@@ -60,7 +61,7 @@ github-data-lake/
 │       └── pr_cycle_times/
 │
 ├── scripts/
-│   ├── bootstrap_historical.py           # GH Archive → Bronze (engångskörning)
+│   ├── bootstrap_historical.py           # GH Archive → Bronze (One-off run)
 │   └── run_pipeline.py                   # argparse CLI: --layer bronze|silver|gold|all
 │
 ├── tests/
@@ -71,44 +72,47 @@ github-data-lake/
 │
 ├── docs/
 │   ├── architecture/
-│   │   ├── overview.mmd                  # Hela systemet
-│   │   ├── ingestion.mmd                 # Bronze-lagret
-│   │   ├── transforms.mmd                # Silver + Gold
-│   │   └── serving.mmd                   # Grafana-lagret
-│   └── session_tracking/                 # Lärloggar per session
+│   │   ├── overview.mmd                  # Complete System Architecture
+│   │   ├── ingestion.mmd                 # Bronze Layer
+│   │   ├── transforms.mmd                # Silver + Gold Layers
+│   │   └── serving.mmd                   # Grafana Layer
+│   └── session_tracking/                 # Learning logs per session
 │       └── session_00x.md
 │
-├── docker-compose.yml                    # Kafka + KRaft + Spark (+ senare Airflow)
-├── .env                                  # Gitignorerad
-├── .env.example                          # Committad (inga riktiga värden)
+├── docker-compose.yml                    # Kafka + KRaft + Spark (+ Airflow)
+├── .env                                  # Gitignored
+├── .env.example                          # Committed (no actual secrets)
 ├── .gitignore
-├── config.py                             # Central config (topics, paths, konstanter)
-├── pyproject.toml                        # uv hanterar deps
+├── config.py                             # Central config (topics, paths, constants)
+├── pyproject.toml                        # Dependency management via `uv`
 └── README.md
+
 ```
-[Mer detaljerad Roadmap](ROADMAP.md)
 
+[View Detailed Roadmap](ROADMAP.md)
 
-## Tech Stack:
-* **Språk:** Python 3.12 (hanterat via `uv`)
+## Tech Stack
+
+* **Language:** Python 3.12 (managed via `uv`)
 * **Ingestion:** Apache Kafka (KRaft) & GitHub REST API
 * **Processing & Transformation:** Pandas, PySpark, dbt
-* **Storage:** Lokala Parquet-filer (Hive-partitionering)
-* **DevOps & Kvalitet:** Docker Compose, GitHub Actions (CI), Ruff, Pytest
+* **Storage:** Local Parquet files (Hive-partitioned)
+* **DevOps & Quality:** Docker Compose, GitHub Actions (CI), Ruff, Pytest
 
+## Quickstart (Run Locally)
 
-## Quickstart (Kör lokalt)
-1. Klon repot och kopiera `.env.example` till `.env`
-2. Kör `uv sync` för att bygga miljön
-3. Snurra upp Kafka-klustret med `docker compose up -d`
+1. Clone the repository and copy `.env.example` to `.env`
+2. Run `uv sync` to build the environment
+3. Spin up the Kafka cluster using `docker compose up -d`
 
-### Grafana DuckDB Plugin (manuell installation krävs)
+### Grafana DuckDB Plugin (Manual Installation Required)
 
-Pluginet `motherduck-duckdb-datasource` finns inte i Grafanas officiella
-registry och ingår inte i repot (binärfil, ~300MB). Ladda ner det manuellt:
+The `motherduck-duckdb-datasource` plugin is not available in Grafana's official registry and is omitted from this repository (binary file, ~300MB). To install it manually:
 
-1. Gå till https://github.com/motherduckdb/grafana-duckdb-datasource/releases/tag/v0.4.0
-2. Ladda ner `motherduck-duckdb-datasource-v0.4.0.linux_amd64.zip`
-3. Packa upp till `serving/grafana/plugins/motherduck-duckdb-datasource/`
+1. Navigate to [https://github.com/motherduckdb/grafana-duckdb-datasource/releases/tag/v0.4.0](https://github.com/motherduckdb/grafana-duckdb-datasource/releases/tag/v0.4.0)
+2. Download `motherduck-duckdb-datasource-v0.4.0.linux_amd64.zip`
+3. Extract the contents to `serving/grafana/plugins/motherduck-duckdb-datasource/`
 
-## TODO: Fylla i resten av README.md
+---
+
+## TODO: Update README and ROADMAP.md as I continue development on this project. For now, click here for [current iteration of complete MVP v1-v3 ROADMAP](ROADMAP.md) or [click here for current planning phase for upcoming MVP versions](docs/session_tracking/PLANNING_v4_v6.md). *note: all documents in this repo needs to be translated from Swedish to English*
