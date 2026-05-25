@@ -13,4 +13,8 @@
     - Documentation debt in form of serving.mmd flowcharts and write docs regarding checkpoint file fix
         - *ongoing*
 
+
+**Monday 25/05-2026**
+- Updated Airflow DAGs, fetched more data before demo tomorrow with R.E at Nex. Fetching more data from 2025.
+    - **Done**
     
