@@ -16,5 +16,8 @@
 
 **Monday 25/05-2026**
 - Updated Airflow DAGs, fetched more data before demo tomorrow with R.E at Nex. Fetching more data from 2025.
-    - **Done**
+    - **Done** 
     
+**Tuesday 26/05-2025**
+- PoC over data lake project shown
+    - **Done**
