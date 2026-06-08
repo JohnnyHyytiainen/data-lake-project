@@ -12,7 +12,7 @@
         - *ongoing*
     - Documentation debt in form of serving.mmd flowcharts and write docs regarding checkpoint file fix
         - *ongoing*
-
+--- 
 
 **Monday 25/05-2026**
 - Updated Airflow DAGs, fetched more data before demo tomorrow with R.E at Nex. Fetching more data from 2025.
@@ -21,3 +21,10 @@
 **Tuesday 26/05-2025**
 - PoC over data lake project shown
     - **Done**
+
+--- 
+**Monday 08/06-2026**
+*Goals for today:*
+- Update Github API token since current one is about to expire
+    - **Done and working**
+    - Example logs from `producer` in `docker`: `2026-06-08 17:45:10 | INFO | Cycle complete | sent=1 skipped_type=99, skipped_dupe=0`
