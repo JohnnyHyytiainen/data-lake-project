@@ -23,7 +23,7 @@ with DAG(
     dag_id="github_lake_pipeline",
     description="Bronze -> Silver via PySpark, Silver -> Gold via dbt",
     # Cron syndax - minut, timme, dag, månad, veckodag
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 11 * * *",
     start_date=datetime(2026, 1, 1),
     # catchup = False: Kör inte igen för alla dagar sedan start_date, annars försöker Airflow köra pipen varje dag sen 26-01-01
     catchup=False,
