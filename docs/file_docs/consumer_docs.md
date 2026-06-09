@@ -11,6 +11,7 @@ Consumern har ett mycket viktigare och ännu mer komplext jobb än producern. Pr
 
 - Partitionering, Skriva till rätt year=/month=/day/ folder automatiskt baserat på eventets timestamp.
 ```
+
 **Enkel liknelse vs producer och consumer**
 - Producern är dum som tåget. Allt den behöver fokusera på är att hålla tiden för avgång. Konstant avgång var 5e minut.
 

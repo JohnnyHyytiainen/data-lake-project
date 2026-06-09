@@ -3,7 +3,7 @@
 
 ## Simplified explanations on DAGs
 
-De DAG diagram som visas vid sökning ser mer invecklade ut än vad det egentligen är. DAG akronymen står för **Directed Acyclic Graph** vilket i stora drag innebär ett mönster som jag redan är van vid att både bygga, tänka kring och jobba med. Enkelt förklarat med nuvarande konceptuell förståelse är detta:
+De DAGs diagram som visas vid sökning ser mer invecklade ut än vad det egentligen är. DAG akronymen står för **Directed Acyclic Graph** vilket i stora drag innebär ett mönster som jag redan är van vid att både bygga, tänka kring och jobba med. Enkelt förklarat med nuvarande konceptuell förståelse är detta:
 
 - Med min nuvarande pipeline och de pipes jag tidigare byggt så flödar datan genom BRONZE -> SILVER -> GOLD. Varje pil pekar framåt, *ALDRIG* bakåt. Jag likadant som att datan alltid ska flöda framåt och inte t.ex från Silver till Bronze, dbt kan aldrig köras innan bronze har flyttat klart datan från bronze till silver. **DET** är en *DAG*.
 
