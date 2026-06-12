@@ -25,3 +25,15 @@ But if the chef and the waitress are the same person who never separate those ro
 The solution is to extract the transformation logic into a pure function, a `_transform()` that takes a `Bronze DataFrame` and returns a `Silver DataFrame`, without a single file system call. It requires a minimal refactoring with a big impact.
 
 The change in `bronze_to_silver.py` is to extract `_transform()`
+
+---
+
+### Inline logic:
+What does `inline logic` mean?
+
+- Inline refers to a computing term where code or data is inserted directly into its appropriate place within a larger block of code, rather than being called from a separate location. It allows for more efficient execution and can often improve performances.
+
+
+### How to separate transformation logic and break that logic out from my main function in bronze_to_silver.py
+To break out my transformation logic from my main function `def run_bronze_to_silver()`, I have to create another function that I will name `def _transform(df_bronze: "DataFrame") -> "DataFrame":` which handles pure transformation logic. It takes a bronze dataframe and writes a silver dataframe. No file I/O logic, no checkpoint logic, only pure transformation logic. By doing this refactor i keep to the separation of concerns principle in practice since `_transform()` function is deterministic and easy to test the logic on. While doing this it clears up my main `run_bronze_to_silver()`-function and lets that function handle `I/O`, `File state tracking(checkpoint)` and can that way test my main function via integration.
+
