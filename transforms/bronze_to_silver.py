@@ -91,6 +91,48 @@ def _save_checkpoint(processed_files: set[str]) -> None:
     logger.info(f"Checkpoint saved | {len(processed_files)} total processed files")
 
 
+# ======= Transform funktion =======
+# Extraherar transformationslogiken till egen separat funktion.
+# Priv funktion, FAAFO
+def _transform(df_bronze: "DataFrame") -> "DataFrame":
+    """
+    Pure transformation logic: Bronze Dataframe -> Silver dataframe.
+    No file-I/O, no checkpoint handling, just transformation.
+
+    SoC in practice.
+    """
+    df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
+    df_deduped = df_filtered.dropDuplicates(["id"])
+    dupes = df_filtered.count() - df_deduped.count()
+    if dupes > 0:
+        logger.info(f"Removed {dupes} duplicate events")
+
+    return df_deduped.select(
+        F.col("id").cast("string").alias("event_id"),
+        F.col("type").cast("string").alias("event_type"),
+        F.col("actor.login").cast("string").alias("actor_login"),
+        F.col("repo.name").cast("string").alias("repo_name"),
+        F.col("repo.id").cast("string").alias("repo_id"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
+        ).alias("commit_count"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.number").cast(
+                "integer"
+            ),
+            F.lit(0),
+        ).alias("pr_number"),
+        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
+                "boolean"
+            ),
+            F.lit(False),
+        ).alias("pr_merged"),
+        F.col("created_at").cast("string"),
+    )
+
+
 # ========== Huvudfunktion ==========
 def run_bronze_to_silver() -> None:
     """
@@ -138,45 +180,9 @@ def run_bronze_to_silver() -> None:
     df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
     logger.info(f"After event-type filter: {df_filtered.count()} events")
 
-    # ========== Deduplicering ==========
-    df_deduped = df_filtered.dropDuplicates(["id"])
-    dupes = df_filtered.count() - df_deduped.count()
-    if dupes > 0:
-        logger.info(f"Removed {dupes} duplicate events")
-
     # ========== Flattening med inbyggda Spark-funktioner ==========
     # Jag skippar UDFen helt! get_json_object extraherar data direkt i JVM-motorn.
-    df_silver = df_deduped.select(
-        F.col("id").cast("string").alias("event_id"),
-        F.col("type").cast("string").alias("event_type"),
-        # 1) actor och repo sparades som 'Structs' (nästlade objekt) i Parquet.
-        # Därför kan jag använda punkt notation direkt! Inget behov av json-funktioner.
-        F.col("actor.login").cast("string").alias("actor_login"),
-        F.col("repo.name").cast("string").alias("repo_name"),
-        F.col("repo.id").cast("string").alias("repo_id"),
-        # 2) payload sparades som en raw textsträng i Bronze.
-        # Jag behåller därför get_json_object här för att gräva i str
-        # Använd coalesce för att fylla på med 0 om "size" saknas
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
-        ).alias("commit_count"),
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.pull_request.number").cast(
-                "integer"
-            ),
-            F.lit(0),
-        ).alias("pr_number"),
-        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
-        # Coalesce för att ge default False om "merged" saknas
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
-                "boolean"
-            ),
-            F.lit(False),
-        ).alias("pr_merged"),
-        F.col("created_at").cast("string"),
-    )
-
+    df_silver = _transform(df_bronze)
     # Trigga cache för att tvinga fram beräkningen
     df_silver.cache()
     silver_count = df_silver.count()
