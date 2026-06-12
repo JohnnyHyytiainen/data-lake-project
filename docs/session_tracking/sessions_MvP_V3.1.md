@@ -39,6 +39,7 @@
 **Friday 12/06-2026**
 
 - Keep working on rebuilding test-suite for github actions ci pipeline. Only linting and formatting in current stage since porting over from pandas to PySpark.
-    - *ongoing*
+    - **Done**
 
-    
+- Refactored `bronze_to_silver` to separate transformation logic from main function. Adhearing to SoC principles.
+    - **Done**
