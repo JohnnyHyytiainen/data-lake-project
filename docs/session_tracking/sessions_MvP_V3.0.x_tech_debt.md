@@ -1,4 +1,4 @@
-# Session tracking notes for MvP v3.0.1+ - Tech debt cleanup
+# Session tracking notes for MvP v3.0.1-v3.0.2 - Tech debt cleanup
 *Ongoing*
 ---
 
@@ -9,7 +9,7 @@
     - Checkpoint file
         - **Done**
     - Update testing suite
-        - *ongoing*
+        - **Done**
     - Documentation debt in form of serving.mmd flowcharts and write docs regarding checkpoint file fix
         - *ongoing*
 --- 
