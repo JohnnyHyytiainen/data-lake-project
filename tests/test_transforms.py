@@ -273,7 +273,7 @@ class TestTransform:
         """
         payload = {
             "action": "merged",
-            "pull_request": {"number": 7, "merged": True},
+            "pull_request": {"number": 7},
         }
         df = spark.createDataFrame(
             [make_bronze_row(event_type="PullRequestEvent", payload=payload)],
