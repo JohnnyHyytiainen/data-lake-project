@@ -31,17 +31,17 @@ from transforms.bronze_to_silver import (
 # SPARK SESSION FIXTURE
 #
 # scope="session" = EN SparkSession delas av ALLA tester i den här filen.
-# Att starta Spark kostar ~3-5 sekunder. Med session-scope körs det
-# endast EN GÅNG inte en gång per test-metod.
+# Att starta Spark kostar ~3-5 sekunder. Med session-scope betalar jag
+# den kostnaden EN gång, inte en gång per test-metod.
 #
 # yield-mönstret (istället för return) låter pytest köra spark.stop()
-# som teardown efter att ALLA tester är klara, ingen leak av resurser.
+# som teardown efter att ALLA tester är klara - ingen läcka av resurser.
 # =====================================================================
 @pytest.fixture(scope="session")
 def spark():
     session = (
         SparkSession.builder.master(
-            "local[1]"  # * behövs inte, endast 1 thread behövs, snabbt och deterministiskt
+            "local[*]"  # En tråd räcker för tester, snabbt och deterministiskt
         )
         .appName("test-bronze-to-silver")
         .getOrCreate()
@@ -54,9 +54,9 @@ def spark():
 # =====================================================================
 # BRONZE SCHEMA
 #
-# Speglar exakt hur Bronze Parquet-filer ser ut på min disk.
-# actor och repo är Structs (nested objects), därför kan jag använda
-# punktnotation(dot notations) (actor.login) direkt i Spark utan get_json_object.
+# Speglar exakt hur Bronze Parquet-filer ser ut på disk.
+# actor och repo är Structs (nästlade objekt), därför kan jag använda
+# punktnotation (actor.login) direkt i Spark utan get_json_object.
 # payload är en JSON-sträng, därför krävs get_json_object för den.
 #
 # Det här schemat måste matcha consumer.py's output. Om consumer.py
@@ -84,14 +84,14 @@ BRONZE_SCHEMA = StructType(
                 ]
             ),
         ),
-        StructField("payload", StringType()),  # JSON-string INTE EN DICT
+        StructField("payload", StringType()),  # JSON-sträng, INTE ett dict
         StructField("created_at", StringType()),
     ]
 )
 
 
 # =====================================================================
-# HELPER FUNCTION: Bygger en Bronze rad med "rimliga" defaults
+# HELPER: Bygg en Bronze-rad med rimliga defaults
 #
 # Gör det enkelt att skapa testvarianter utan att upprepa all data.
 # DRY-principen tillämpad på testdata, samma princip som pytest fixtures,
@@ -108,14 +108,14 @@ def make_bronze_row(
 ) -> tuple:
     if payload is None:
         payload = {"size": 3}
-    # Tuples matchar BRONZE_SCHEMA's kolumnordning.
+    # Tuples matchar BRONZE_SCHEMA kolumnordning.
     # actor och repo är nästlade tuples som matchar deras StructType.
     return (
         event_id,
         event_type,
         (actor_login, 99),
         (repo_name, repo_id),
-        json.dumps(payload),  # payload MÅSTE vara en JSON-sträng, inte en dict
+        json.dumps(payload),  # payload MÅSTE vara en JSON-sträng, inte ett dict
         created_at,
     )
 
@@ -188,7 +188,7 @@ class TestTransform:
         """
         rows = [
             make_bronze_row(event_id="dupe-001"),
-            make_bronze_row(event_id="dupe-001"),  # Exakt duplicate, den ska bort
+            make_bronze_row(event_id="dupe-001"),  # Exakt duplikat - ska tas bort
             make_bronze_row(event_id="unique-002"),
         ]
         df = spark.createDataFrame(rows, schema=BRONZE_SCHEMA)
@@ -281,9 +281,9 @@ class TestTransform:
         )
         row = _transform(df).collect()[0]
 
-        # pr_merge är False trots att payload säger True, Github API issue
+        # pr_merged är False trots att payload säger True - GitHub API-quirk
         assert row["pr_merged"] is False
-        # pr_action är däremot korrekt, det rätta sättet att hitta merged PRS
+        # pr_action är däremot korrekt, det rätta sättet att hitta merged PRs
         assert row["pr_action"] == "merged"
 
     # test för partitionkeys med zero-padding
