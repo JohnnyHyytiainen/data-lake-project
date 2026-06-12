@@ -28,3 +28,8 @@
 - Update Github API token since current one is about to expire
     - **Done and working**
     - Example logs from `producer` in `docker`: `2026-06-08 17:45:10 | INFO | Cycle complete | sent=1 skipped_type=99, skipped_dupe=0`
+
+---
+**Tuesday 09/06-2026**
+
+- DO NOT run `git clean -fdx`
