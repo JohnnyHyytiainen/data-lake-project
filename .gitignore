@@ -122,4 +122,4 @@ kafka-logs/
 # --- Grafana Plugins --- 
 serving/grafana/plugins/
 # --- Undantag för Grafana-konfiguration ---
-!serving/grafana/dashboards/*.json          # Tillåt dashboard-JSON att committas
+!/serving/grafana/dashboards/*.json         

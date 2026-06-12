@@ -47,11 +47,11 @@
 ---
 
 **Friday 12/06-2026**
-- Update previously destroyed `serving-layer` with a `Grafana`-dashboard.
-    - *ongoing*
+- Update previously destroyed `serving-layer JSON` with a `Grafana`-dashboard.
+    - **Done**
 
 - Write more extensive documentation regarding on how to setup serving layer once more if incidents happen again
-    - *ongoing*
+    - **Done**
 
 - Implement a flowchart/diagram with `.mmd`-code over `serving-layer`
     - *ongoing*
