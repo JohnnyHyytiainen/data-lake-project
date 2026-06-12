@@ -11,7 +11,7 @@ import json
 from datetime import datetime, timezone
 
 # PySpark imports
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 
 # Kör enbart på Windows/lokalt, i Docker hanteras Hadoop och Python-paths
@@ -91,6 +91,55 @@ def _save_checkpoint(processed_files: set[str]) -> None:
     logger.info(f"Checkpoint saved | {len(processed_files)} total processed files")
 
 
+# ======= Transform funktion =======
+# Extraherar transformationslogiken till egen separat funktion.
+# Priv funktion, FAAFO
+def _transform(df_bronze: DataFrame) -> DataFrame:
+    """
+    Pure transformation logic: Bronze Dataframe -> Silver dataframe.
+    No file-I/O, no checkpoint handling, just transformation.
+
+    SoC in practice.
+    """
+    # 1) Filtrering på relevanta händelser(events)
+    df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
+    # 2) Deduplicering för att säkerställa att exakt samma event inte sparas fler ggr
+    df_deduped = df_filtered.dropDuplicates(["id"])
+
+    # 3) Flattening med inbyggd Spark-funktioner.
+    # Jag skippar UDF:er helt! Inbyggda funktioner extraherar datan direkt
+    # i den optimerade JVM-motorn, vilket är mycket snabbare.
+    return df_deduped.select(
+        F.col("id").cast("string").alias("event_id"),
+        F.col("type").cast("string").alias("event_type"),
+        # Eftersom att actor och repo sparades som 'structs' i parquet
+        # kan jag använda enkel dotnotation direkt istället för json funktioner
+        F.col("actor.login").cast("string").alias("actor_login"),
+        F.col("repo.name").cast("string").alias("repo_name"),
+        F.col("repo.id").cast("string").alias("repo_id"),
+        # payload är en raw text string i Bronze, här använder jag get_json_object
+        # för att extracta specifika fält. Coalesce för att ge ett default värde (ex 0)
+        # om fältet 'size' eller 'number skulle saknas i json-objektet
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
+        ).alias("commit_count"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.number").cast(
+                "integer"
+            ),
+            F.lit(0),
+        ).alias("pr_number"),
+        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
+        F.coalesce(
+            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
+                "boolean"
+            ),
+            F.lit(False),
+        ).alias("pr_merged"),
+        F.col("created_at").cast("string"),
+    )
+
+
 # ========== Huvudfunktion ==========
 def run_bronze_to_silver() -> None:
     """
@@ -104,6 +153,7 @@ def run_bronze_to_silver() -> None:
         SparkSession.builder.master("local[*]")
         .appName("github-data-lake-bronze-to-silver")
         # Talar om för Spark att skriva Parquet med Hive-style partitionering
+        # 'dynamic' skriver bara över specifika partitioner jag har ny data för
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .getOrCreate()
     )
@@ -112,7 +162,7 @@ def run_bronze_to_silver() -> None:
     logger.info("Starting Bronze -> Silver transformation (PySpark)")
 
     # ========== INKREMENTELL FIL SELEKTION ==========
-    # Hitta ALLA Bronze filer och filtrera bort de jag redan bearbetat.
+    # Hitta ALLA Bronze-filer och jämför med checkpointen för att enbart få ut nya filer.
     all_bronze_files = [str(p) for p in BRONZE_DIR.rglob("*.parquet")]
     processed_files = _load_checkpoint()
 
@@ -134,56 +184,22 @@ def run_bronze_to_silver() -> None:
     total = df_bronze.count()
     logger.info(f"Loaded {total} new events from Bronze layer.")
 
-    # ========== Filtrera på kända event typer ==========
-    df_filtered = df_bronze.filter(F.col("type").isin(list(RELEVANT_EVENT_TYPES)))
-    logger.info(f"After event-type filter: {df_filtered.count()} events")
-
-    # ========== Deduplicering ==========
-    df_deduped = df_filtered.dropDuplicates(["id"])
-    dupes = df_filtered.count() - df_deduped.count()
-    if dupes > 0:
-        logger.info(f"Removed {dupes} duplicate events")
-
-    # ========== Flattening med inbyggda Spark-funktioner ==========
-    # Jag skippar UDFen helt! get_json_object extraherar data direkt i JVM-motorn.
-    df_silver = df_deduped.select(
-        F.col("id").cast("string").alias("event_id"),
-        F.col("type").cast("string").alias("event_type"),
-        # 1) actor och repo sparades som 'Structs' (nästlade objekt) i Parquet.
-        # Därför kan jag använda punkt notation direkt! Inget behov av json-funktioner.
-        F.col("actor.login").cast("string").alias("actor_login"),
-        F.col("repo.name").cast("string").alias("repo_name"),
-        F.col("repo.id").cast("string").alias("repo_id"),
-        # 2) payload sparades som en raw textsträng i Bronze.
-        # Jag behåller därför get_json_object här för att gräva i str
-        # Använd coalesce för att fylla på med 0 om "size" saknas
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.size").cast("integer"), F.lit(0)
-        ).alias("commit_count"),
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.pull_request.number").cast(
-                "integer"
-            ),
-            F.lit(0),
-        ).alias("pr_number"),
-        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
-        # Coalesce för att ge default False om "merged" saknas
-        F.coalesce(
-            F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
-                "boolean"
-            ),
-            F.lit(False),
-        ).alias("pr_merged"),
-        F.col("created_at").cast("string"),
-    )
-
-    # Trigga cache för att tvinga fram beräkningen
+    # ----- TRANSFORMATION -----
+    # Anropar min separerade transformerings function
+    df_silver = _transform(df_bronze)
+    # Trigga cache för att tvinga fram beräkningen, det krävs eftersom
+    # count() annars tvingar Spark att beräkna HELA flödet från start igen.
     df_silver.cache()
     silver_count = df_silver.count()
-    logger.info(f"Flattened {silver_count} events to Silver schema")
+    # Loggning och visuell feedback för att följa silver counts och dedupes+filtrerade (borttagna)
+    removed = total - silver_count
+    logger.info(
+        f"Flattened {silver_count} events to Silver schema | {removed} removed by filter + deduplication"
+    )
 
-    # ========== Rensar berörda silver partitions ==========
-    # ==========        (Idempotens)              ==========
+    # ========== RENSNING AV PARTITIONER  ==========
+    # ==========        (Idempotens)      ==========
+    # Hittar vilka unika datum min nyligen transformerade data berör
     dates = df_silver.select(F.to_date("created_at").alias("date")).distinct().collect()
 
     for row in dates:
@@ -193,13 +209,15 @@ def run_bronze_to_silver() -> None:
             shutil.rmtree(partition)
             logger.info(f"Cleared Silver partition: {partition}")
 
-    # ========== Skriva till silver ==========
+        # ========== Skriva till silver ==========
     (
         df_silver.withColumn("year", F.year(F.to_timestamp("created_at")))
         # Date_format med "MM" och "dd" tvingar fram inledande nollor, ex: month=03
         .withColumn("month", F.date_format(F.to_timestamp("created_at"), "MM"))
         .withColumn("day", F.date_format(F.to_timestamp("created_at"), "dd"))
-        .coalesce(4)
+        .coalesce(
+            4
+        )  # Slår ihop data till max 4x filer per partition för bättre I/O prestanda
         .write.mode("overwrite")
         .partitionBy("year", "month", "day")
         .parquet(str(SILVER_DIR))
