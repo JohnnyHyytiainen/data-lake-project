@@ -28,19 +28,33 @@ jobs:
       - name: Set up python
         run: uv python install 3.12
 
-      # Steg D) Ladda ner alla deps(dependencies, dvs: FastAPI, psycopg, pytest etc etc..)
+
+      # Sted D) Java krävs för PySpark, Spark är skrivet i Scala och körs på JVM
+      # Temurin är Eclipse foundations öppna OpenJDK distribution (gratis)
+      # UTAN DET HÄR STEGET: -> Alla PySpark tester KRASCHAR pga "java not found"
+      - name: Set up Java (Required for PySpark to work)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+ 
+
+      # Steg E) Ladda ner alla deps(dependencies, dvs: FastAPI, psycopg, pytest etc etc..)
       - name: Install dependencies
+
         # Installerar (syncar med repots deps) alla dependencies som finns i repots pyproject.toml fil
         run: uv sync
 
-      # Steg E) Kör ruff för att kolla kodstil(linting)
+      # Steg F) Kör ruff för att kolla kodstil(linting)
       - name: Lint with Ruff
         run: uv run ruff check .
 
-      # Steg F) Kör Ruff för att kolla formatering
+      # Steg G) Kör Ruff för att kolla formatering
       - name: Format check using Ruff
         run: uv run ruff format --check .
 
-        # Steg G) Kör testerna på vår kod vi pushar. Om detta MISSLYCKAS -> Pull requesten STOPPAS.
-    #  - name: Run Unit tests
-    #    run: uv run pytest tests/
+      # Steg H) Kör testerna på den kod jag pushar. Om detta MISSLYCKAS -> Pull requesten STOPPAS.
+      # Kör bara test_transforms.py, producer/consumer tests är INTE ännu implementerade.
+      # TODO: implementera test-suite för producer+consumer
+      - name: Run Unit tests
+        run: uv run pytest tests/test_transforms.py -v
