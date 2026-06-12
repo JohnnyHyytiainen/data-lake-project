@@ -1,4 +1,4 @@
-# Session tracking notes for MvP v3.0.1 - Tech debt cleanup
+# Session tracking notes for MvP v3.0.1+ - Tech debt cleanup
 *Ongoing*
 ---
 
@@ -43,3 +43,17 @@
 
 - Refactored `bronze_to_silver` to separate transformation logic from main function. Adhearing to SoC principles.
     - **Done**
+
+---
+
+**Friday 12/06-2026**
+- Update previously destroyed `serving-layer JSON` with a `Grafana`-dashboard.
+    - **Done**
+
+- Write more extensive documentation regarding on how to setup serving layer once more if incidents happen again
+    - **Done**
+
+- Implement a flowchart/diagram with `.mmd`-code over `serving-layer`
+    - *ongoing*
+
+    

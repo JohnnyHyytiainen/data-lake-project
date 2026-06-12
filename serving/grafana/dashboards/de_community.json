@@ -1,0 +1,130 @@
+{
+  "title": "DE Community - GitHub Activity",
+  "uid": "de-community-dashboard",
+  "description": "Tool growth, activity patterns och PR cycle times i DE-communityt på GitHub",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5m",
+  "tags": ["data-engineering", "github", "portfolio"],
+  "timezone": "browser",
+  "time": { "from": "now-6M", "to": "now" },
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "DE Tool Growth - Top 10 Repos (Cumulative Stars)",
+      "description": "Ackumulerade stars per vecka för de 10 mest starred DE-repos i datasetet",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+          "rawSql": "WITH top_repos AS (\n  SELECT repo_name\n  FROM tool_growth\n  GROUP BY repo_name\n  ORDER BY MAX(CAST(cumulative_stars AS BIGINT)) DESC\n  LIMIT 10\n)\nSELECT\n  t.week_start AS time,\n  t.repo_name,\n  CAST(t.cumulative_stars AS BIGINT) AS cumulative_stars\nFROM tool_growth t\nINNER JOIN top_repos r ON t.repo_name = r.repo_name\nORDER BY t.week_start ASC, t.repo_name ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": { "format": "many_frames_from_long_format" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": ["lastNotNull"]
+        }
+      }
+    },
+
+    {
+      "id": 2,
+      "title": "Community Activity Heatmap - Hour × Weekday",
+      "description": "När är DE-communityt aktivt? Mörkare färg = fler events. Spark dayofweek: 1=Sunday, 7=Saturday.",
+      "type": "heatmap",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+          "rawSql": "SELECT\n  hour_of_day,\n  CAST(SUM(CASE WHEN day_of_week = 1 THEN event_count ELSE 0 END) AS INTEGER) AS \"1_Mon\",\n  CAST(SUM(CASE WHEN day_of_week = 2 THEN event_count ELSE 0 END) AS INTEGER) AS \"2_Tue\",\n  CAST(SUM(CASE WHEN day_of_week = 3 THEN event_count ELSE 0 END) AS INTEGER) AS \"3_Wed\",\n  CAST(SUM(CASE WHEN day_of_week = 4 THEN event_count ELSE 0 END) AS INTEGER) AS \"4_Thu\",\n  CAST(SUM(CASE WHEN day_of_week = 5 THEN event_count ELSE 0 END) AS INTEGER) AS \"5_Fri\",\n  CAST(SUM(CASE WHEN day_of_week = 6 THEN event_count ELSE 0 END) AS INTEGER) AS \"6_Sat\",\n  CAST(SUM(CASE WHEN day_of_week = 7 THEN event_count ELSE 0 END) AS INTEGER) AS \"7_Sun\"\nFROM activity_heatmap\nGROUP BY hour_of_day\nORDER BY hour_of_day ASC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "options": {
+        "calculate": false,
+        "cellGap": 2,
+        "color": {
+          "mode": "scheme",
+          "scheme": "Oranges",
+          "steps": 64,
+          "reverse": false
+        },
+        "legend": { "show": true },
+        "tooltip": { "mode": "single" },
+        "yAxis": { "axisPlacement": "left", "reverse": false },
+        "rowsFrame": { "layout": "auto" }
+      }
+    },
+
+    {
+      "id": 3,
+      "title": "PR Cycle Times - Median & P95 (timmar)",
+      "description": "Repos med längst PR-cykel. Grön = median (typisk cykel), Gul = p95 (de 5% långsammaste PRs - stora features, blockerade reviews).",
+      "type": "barchart",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "motherduck-duckdb-datasource", "uid": "github-lake-duckdb" },
+          "rawSql": "SELECT\n  repo_name,\n  CAST(median_hours AS DOUBLE) AS median_hours,\n  CAST(p95_hours AS DOUBLE) AS p95_hours\nFROM pr_cycle_times\nWHERE median_hours > 0\nORDER BY median_hours DESC\nLIMIT 15"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "lineWidth": 1 },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "stacking": "none",
+        "showValue": "never",
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      }
+    }
+
+  ]
+}
