@@ -59,4 +59,7 @@
     
 **Saturday 13/06-2026**
 - Discovered bug in checkpoint file that needs to be fixed before moving on.
-    - *ongoing*
+    - **Done**
+
+- Added another unit-test for `Ci-pipe` to test checkpoint logic for PRs prior to merges.
+    - **Done**

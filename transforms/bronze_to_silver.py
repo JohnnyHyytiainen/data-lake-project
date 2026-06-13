@@ -58,7 +58,9 @@ def _load_checkpoint() -> set[str]:
     with open(BRONZE_SILVER_CHECKPOINT, "r") as f:
         data = json.load(f)
         relative_paths = set(data.get("processed_files", []))
-        processed = {str(BRONZE_DIR / rel) for rel in relative_paths}
+        processed = {
+            str(BRONZE_DIR / Path(rel.replace("\\", "/"))) for rel in relative_paths
+        }
         last_run = data.get("last_run", "unknown")
         logger.info(
             f"Checkpoint loaded | {len(processed)} files already processed | last_run={last_run}"
@@ -77,7 +79,9 @@ def _save_checkpoint(processed_files: set[str]) -> None:
 
     # Konvertera absoluta paths till relativa paths innan lagring
     # Path(f).relative_to(BRONZE_DIR) ger t.ex. year=2025/month=11/day=01/abc.parquet
-    relative_paths = [str(Path(f).relative_to(BRONZE_DIR)) for f in processed_files]
+    relative_paths = [
+        Path(f).relative_to(BRONZE_DIR).as_posix() for f in processed_files
+    ]
 
     with open(BRONZE_SILVER_CHECKPOINT, "w") as f:
         json.dump(
