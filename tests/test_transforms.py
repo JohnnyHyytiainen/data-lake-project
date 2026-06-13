@@ -405,3 +405,29 @@ class TestCheckpoint:
                 f"Checkpoint should store Relative paths to work "
                 f"Correct in both local environment and docker."
             )
+
+    # Test för att se så att checkpointfilen ALLTID returnerar / slashes och aldrig backslashes
+    def test_saved_paths_always_use_forward_slashes(self, tmp_path, monkeypatch):
+        """
+        The checkpoint file should ALWAYS store forward slashes, never backslashes.
+        str(Path(...)) returns backslashes on Windows, as_posix() always returns
+        forward slashes regardless of OS. If you mix them in the same file,
+        Docker runs will miss all Windows-written entries and cold run unnecessarily.
+        """
+        checkpoint_path = tmp_path / "checkpoint.json"
+        monkeypatch.setattr(
+            "transforms.bronze_to_silver.BRONZE_SILVER_CHECKPOINT",
+            checkpoint_path,
+        )
+
+        fake_files = {str(BRONZE_DIR / "year=2026/month=06/day=13/test.parquet")}
+        _save_checkpoint(fake_files)
+
+        with open(checkpoint_path) as f:
+            data = json.load(f)
+
+        for saved_path in data["processed_files"]:
+            assert "\\" not in saved_path, (
+                f"Backslash hittad i checkpoint: {saved_path}\n"
+                f"Använd as_posix() istället för str(Path(...)) vid sparning."
+            )
