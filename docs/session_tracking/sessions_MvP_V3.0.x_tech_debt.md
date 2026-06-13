@@ -68,7 +68,7 @@
     - **Done**
 
 - Implement a flowchart/diagram with `.mmd`-code over `serving-layer`
-    - *ongoing*
+    - **Done**
 
 - Update + polish `README.md` to include setup for `serving-layer`
     - *ongoing*
