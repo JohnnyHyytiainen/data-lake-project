@@ -71,9 +71,9 @@
     - **Done**
 
 - Update + polish `README.md` to include setup for `serving-layer`
-    - *ongoing*
+    - **Done**
 
 - Update documentation structure and cleanup. Categorise my own documentations with either a `prefix-system` or some kind of `folder structure`-system
-    - *ongoing*
+    - **Half done**
 
     
