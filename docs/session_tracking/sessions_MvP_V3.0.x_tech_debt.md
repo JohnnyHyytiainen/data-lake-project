@@ -1,5 +1,5 @@
 # Session tracking notes for MvP v3.0.1-v3.0.2 - Tech debt cleanup
-*Ongoing*
+**Done**
 ---
 
 **Monday 18/05-2026**
