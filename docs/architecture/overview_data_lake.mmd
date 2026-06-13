@@ -22,6 +22,12 @@ flowchart TD
         Skriver Parquet till disk"]
     end
 
+    subgraph ORCH["Orchestration"]
+        AIR["Apache Airflow
+        DAG: github_lake_dag.py
+        Schemalägger Bronze→Silver→Gold"]
+    end
+
     subgraph BRONZE["Bronze Layer 
     (Rådata, orörd)"]
         BP["data/bronze/events/
@@ -41,26 +47,26 @@ flowchart TD
 
     subgraph GOLD["Gold Layer
     (Aggregerad, analysklar)"]
-        STG["silver_to_gold.py
-        PySpark + dbt
+        STG["dbt run
+        Staging VIEW + Mart TABLEs
         Business logic"]
         GP1["tool_growth/
         Vilka DE-verktyg växer snabbast?"]
         GP2["activity_heatmap/
         När är communityt aktivt?"]
-        GP3["pr_cycle_times/Hur lång är en typisk PR-cykel?"]
+        GP3["pr_cycle_times/
+        Hur lång är en typisk PR-cykel?"]
     end
 
     subgraph SERVING["Serving Layer"]
+        DUCK[("DuckDB
+        github_lake.duckdb
+        Läser Gold Parquet via glob")]
         GRAF["Grafana
-        Dashboards"]
+        de_community.json (3 paneler)
+        motherduck-duckdb-datasource v0.4.0"]
     end
 
-    subgraph ORCH["Orchestration"]
-        AIR["Apache Airflow
-        DAG: github_lake_dag.py
-        Schemalägger Bronze→Silver→Gold"]
-    end
 
     GHA -->|".json.gz filer"| BOOT
     GHE -->|"JSON events"| PROD
@@ -74,8 +80,9 @@ flowchart TD
     STG --> GP1
     STG --> GP2
     STG --> GP3
-    GP1 --> GRAF
-    GP2 --> GRAF
-    GP3 --> GRAF
+    GP1 -->|"glob-läsning"| DUCK
+    GP2 -->|"glob-läsning"| DUCK
+    GP3 -->|"glob-läsning"| DUCK
+    DUCK -->|"Go-driver + plugin"| GRAF
     AIR -.->|"Triggar"| BTS
-    AIR -.->|"Triggar"| STG
+    AIR -.->|"Triggar dbt"| STG

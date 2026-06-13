@@ -1,0 +1,63 @@
+flowchart TD
+    subgraph UPSTREAM["Upstream - dbt producerar Gold (triggas av Airflow)"]
+        DBT["dbt run
+        DockerOperator i github_lake_dag.py
+        profiles: manual - DuckDB single-writer begränsning"]
+        GP1["data/gold/tool_growth/*.parquet
+        Star-tillväxt per verktyg PER vecka"]
+        GP2["data/gold/activity_heatmap/*.parquet
+        extract('isodow') - 1=Måndag... 7=Söndag"]
+        GP3["data/gold/pr_cycle_times/*.parquet
+        Median + p95 cykeltid i timmar"]
+        DBT --> GP1
+        DBT --> GP2
+        DBT --> GP3
+    end
+
+    subgraph DUCKDB["DuckDB Query Engine"]
+        DB[("github_lake.duckdb
+        Läser Gold Parquet via glob-sökväg
+        OBS: SUM(BIGINT) -> Returnerar HUVEINT (128-bit)
+        ALLA Grafana-queries: CAST(SUM(x) AS BIGINT)")]
+    end
+
+    subgraph PLUGIN["Grafana Plugin - Manuell installation"]
+        PLG["motherduck-duckdb-datasource v0.4.0
+        Unsigned plugin (inget MANIFEST.txt)
+        Kräver env: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+        Linux AMD64-binary - kräver glibc, ej musl/Alpine
+        Sökväg: serving/grafana/plugins (gitignored)"]
+    end
+
+    subgraph PROV["Automatisk Grafana-provisioning"]
+        DS["provisioning/datasources/duckdb.yml
+        uid: github-lake-duckdb
+        Deterministisk UID - refereras av dashboard-JSON"]
+        DP["provisioning/dashboards/provider.yml
+        updateIntervalSeconds: 30
+        Plockar upp de_community.json automatiskt"]
+    end
+
+    subgraph GRAFANA["Grafana Container"]
+        IMG["Image: grafana/grafana:latest-ubuntu
+        OBS: Ej standard Alpine-image
+        duckdb-go kräver glibc - musl/Alpine inkompatibelt, tyst fail
+        user: '0' - UID-konflikt med dbt-containerns skrivna filer
+        data/-volume utan :ro - DuckDB skapar .lock-fil vid läsning
+        Port: 3000"]
+        DASH["dashboards/de_community.json
+        Panel 1 - tool_growth: star tillväxt per DE-verktyg
+        Panel 2 - activity_heatmap: 7x24 aktivitetskarta
+        Panel 3 - pr_cycle_times: median + p95
+        Committad - skyddad av .gitignore-undantag"]
+    end
+
+    GP1 -->|"glob-läsning"| DB
+    GP2 -->|"glob-läsning"| DB
+    GP3 -->|"glob-läsning"| DB
+    DB -->|"DuckDB Go-driver"| PLG
+    PLG -->|"plugin registrerat"| IMG
+    DS -->|"konfigurerar datasource"| IMG
+    DP -->|"provisionar dashboard-folder"| DASH
+    DASH -->|"laddas in automatiskt"| IMG
+ 

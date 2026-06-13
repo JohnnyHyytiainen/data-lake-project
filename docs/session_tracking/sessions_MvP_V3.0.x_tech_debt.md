@@ -10,8 +10,6 @@
         - **Done**
     - Update testing suite
         - **Done**
-    - Documentation debt in form of serving.mmd flowcharts and write docs regarding checkpoint file fix
-        - *ongoing*
 --- 
 
 **Monday 25/05-2026**
@@ -47,6 +45,8 @@
 ---
 
 **Friday 12/06-2026**
+*Goals for today:*
+
 - Update previously destroyed `serving-layer JSON` with a `Grafana`-dashboard.
     - **Done**
 
@@ -56,10 +56,24 @@
 - Implement a flowchart/diagram with `.mmd`-code over `serving-layer`
     - *ongoing*
 
-    
+---
+
 **Saturday 13/06-2026**
+*goals for today:* 
+
 - Discovered bug in checkpoint file that needs to be fixed before moving on.
     - **Done**
 
 - Added another unit-test for `Ci-pipe` to test checkpoint logic for PRs prior to merges.
     - **Done**
+
+- Implement a flowchart/diagram with `.mmd`-code over `serving-layer`
+    - **Done**
+
+- Update + polish `README.md` to include setup for `serving-layer`
+    - **Done**
+
+- Update documentation structure and cleanup. Categorise my own documentations with either a `prefix-system` or some kind of `folder structure`-system
+    - **Half done**
+
+    
