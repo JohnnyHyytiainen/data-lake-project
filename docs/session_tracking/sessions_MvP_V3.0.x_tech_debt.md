@@ -57,3 +57,6 @@
     - *ongoing*
 
     
+**Saturday 13/06-2026**
+- Discovered bug in checkpoint file that needs to be fixed before moving on.
+    - *ongoing*
