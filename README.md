@@ -205,9 +205,8 @@ The dashboard (`de_community.json`) and datasource config (`duckdb.yml`) are com
 | `v3.0.2` | Serving layer rebuilt, Grafana dashboard verified |
 
  
-**Current:** `v3.0.2` - Cleanup sprint complete.  
-**Next:** MVP v4 - data quality contracts (Soda Core as Silver -> Gold gatekeeper in Airflow).
-
+**Current:** MVP v4 - data quality contracts (Soda Core as Silver -> Gold gatekeeper in Airflow).  
+**Next:** MVP v5 - Deeper analysis and broader/wider insights from Githubs Data.
  
 --> [Full Roadmap](ROADMAP.md)
  
