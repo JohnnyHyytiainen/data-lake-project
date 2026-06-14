@@ -1,0 +1,60 @@
+# Soda CL, Silver layer quality checks
+# github-data-lake * MVP v4
+# "checks for" måste matcha VIEW-namnet exakt i run_checks.py
+
+checks for silver_events:
+
+  # === VOLUME KONTROLLER ===
+  # Pipelines som producerar NOLL rader misslyckas i tystnad UTAN det här
+  - row_count > 0:
+      name: Silver-layer contains data
+
+  # === NULL KONTROLLER PÅ NYCKEL COLUMNS ===
+  # Dessa columns är OBLIGATORISKA i ALLA rows oavsett event type
+  - missing_count(event_id) = 0:
+      name: event_id is never null
+  - missing_count(event_type) = 0:
+      name: event_type is never null
+  - missing_count(repo_name) = 0:
+      name: repo_name is never null
+  - missing_count(created_at) = 0:
+      name: created_at is never null
+
+
+  # === DEDUPLICATION ===
+  # bronze_to_silver deduplicerar på event_id - Det är det här som verifierar att den faktiskt gör sitt jobb
+  - duplicate_count(event_id) = 0:
+      name: event_id is unique per row
+
+
+  # === LOGICAL CONSISTENCY CONTROLS ===
+
+  # conditional control: Varje PullRequestEvent MÅSTE ha pr_action satt
+  # failed rows genererar: SELECT * FROM silver_events WHERE <fail_condition>
+  # Om NÅGON rad returneras --> FAIL direkt(fail fast)
+  - failed rows:
+      name: PullRequestEvent missing pr_action
+      fail condition: event_type = 'PullRequestEvent' AND pr_action IS NULL
+      samples limit: 50
+
+  # Timestamps i framtiden = trasig "klocka" på producent sidan eller Data corruption
+  - failed rows:
+      name: No future timestamps
+      fail condition: TRY_CAST(created_at AS TIMESTAMP) > now()
+      samples limit: 50
+
+    # Validerar BARA pr_action för faktiska PullRequestEvent rader.
+    # Övriga event-typer har egna actions (started, created, forked)
+    # lagrade i samma kolumn, det är ett känt schemaval, ej korruption.
+  - failed rows:
+      name: PullRequestEvent has got an unknown pr_action value
+      fail condition: >
+        event_type = 'PullRequestEvent'
+        AND pr_action NOT IN (
+          'opened', 'closed', 'merged', 'reopened',
+          'synchronize', 'ready_for_review', 'labeled',
+          'unlabeled', 'assigned', 'unassigned',
+          'converted_to_draft', 'review_requested',
+          'review_request_removed', 'edited', 'locked', 'unlocked'
+        )
+      samples limit: 50
