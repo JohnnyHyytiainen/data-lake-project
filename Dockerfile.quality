@@ -1,0 +1,16 @@
+# Dockerfile.quality
+# Bygger en minimal container image från en officiell Python-bas.
+# "lättaste" containern i hela projektet.
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# soda-core-duckdb drar in duckdb och soda-core som dependency(beroenden) automatiskt
+RUN uv pip install soda-core-duckdb --system --no-cache-dir
+
+
+# --system = installera globalt i imagen, inte i en virtualenv (venvs i Docker är onödiga)
+# --no-cache-dir = håller imagen liten.
