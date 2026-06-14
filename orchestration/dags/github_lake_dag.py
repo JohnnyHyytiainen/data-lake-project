@@ -70,7 +70,32 @@ with DAG(
         network_mode="data-lake-network",
     )
 
-    # TASK 2) dbt, Silver -> Gold layer. DockerOperator bygger på dbt imagen och kör dbt run
+    # TASK 2) Soda Core - QUALITY CONTROL av silver layer
+    # Kör quality/checks/silver_checks.yml mot Parquet via DuckDB bryggan jag byggt.
+    # Exit 1 --> Airflow FAILAR tasken --> run_dbt triggas ALDRIG.
+    run_quality = DockerOperator(
+        task_id="quality_check_silver",
+        image="data-lake-project-quality",
+        command=["python", "/app/quality/run_checks.py"],
+        mounts=[
+            Mount(
+                source=f"{PROJECT_ROOT}/quality",
+                target="/app/quality",
+                type="bind",
+            ),
+            Mount(
+                source=f"{PROJECT_ROOT}/data",
+                target="/app/data",
+                type="bind",
+            ),
+        ],
+        mount_tmp_dir=False,
+        auto_remove="success",
+        docker_url="unix://var/run/docker.sock",
+        working_dir="/app",
+    )
+
+    # TASK 3) dbt, Silver -> Gold layer. DockerOperator bygger på dbt imagen och kör dbt run
     # Samma som docker-compose run --rm dbt MEN triggas av Airflow ist för manuellt av mig
     run_dbt = DockerOperator(
         task_id="silver_to_gold_dbt",
@@ -100,4 +125,4 @@ with DAG(
 
     # BEROENDEN: Silver _MÅSTE_ vara klar innan dbt ska starta. Definitionen av DAG, aldrig bakåt.
     # I Airflow UI ser det ut som två nodes med en pil mellan
-    run_silver >> run_dbt
+    run_silver >> run_quality >> run_dbt
