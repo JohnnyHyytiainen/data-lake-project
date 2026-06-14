@@ -7,7 +7,17 @@
     - **Done**
 
 - Choose between `soda-core-duckdb` vs `soda-core-spark` - document each pros / cons before choosing
-    - *ongoing*
+    - **Done** - `soda-core-duckdb`
 
-- 
+- Update self written docs briefly about soda-core, data contracts.
+    - **Done**
+
+
+- Start implementing soda core by:
+    1) update my `pyproject.toml`
+    2) Build my `Dockerfile.quality` - A lightweight image
+    3) Write my `quality/checks/silver_checks.yml`-contracts and practice soda CL syntaxt
+    4) write `quality/run_checks.py` - script and put together `DuckDB` + `Soda`
+    5) Update my `github_lake_dag.py` - and add the new task.
+    - *ongoing*
     
