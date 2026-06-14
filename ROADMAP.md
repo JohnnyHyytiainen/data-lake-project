@@ -143,27 +143,27 @@ bronze_to_silver --> quality_check_silver --> silver_to_gold_dbt
 ### Kvalitetskontrakt att implementera
 
 Volymkontroller (Completeness):
-- [ ] Antal Silver-rader ≥ 80% av antal Bronze-rader per körning (fångar onormal dataförlust)
-- [ ] Antal nya Silver-rader > 0 om nya Bronze-filer processades
+- [x] Antal Silver-rader ≥ 80% av antal Bronze-rader per körning (fångar onormal dataförlust)
+- [x] Antal nya Silver-rader > 0 om nya Bronze-filer processades
 
 Null-kontroller på nyckelkolumner:
-- [ ] `event_id` - aldrig null
-- [ ] `event_type` - aldrig null
-- [ ] `repo_name` - aldrig null
-- [ ] `created_at` - aldrig null
+- [x] `event_id` - aldrig null
+- [x] `event_type` - aldrig null
+- [x] `repo_name` - aldrig null
+- [x] `created_at` - aldrig null
 
 Logiska konsistenskontroller:
-- [ ] `pr_cycle_time_hours` aldrig negativ (PR kan inte stängas innan den öppnas)
-- [ ] `pr_action` inte null när `event_type = 'PullRequestEvent'`
-- [ ] `created_at` inom rimligt intervall (ej i framtiden, ej före 2020)
+- [x] `pr_cycle_time_hours` aldrig negativ (PR kan inte stängas innan den öppnas)
+- [x] `pr_action` inte null när `event_type = 'PullRequestEvent'`
+- [x] `created_at` inom rimligt intervall (ej i framtiden, ej före 2020)
 
 ### Implementation
 
-- [ ] Lägg till `soda-core-duckdb` eller `soda-core-spark` i `pyproject.toml`
-- [ ] Skapa `quality/checks/silver_checks.yml` med kontrakten ovan
-- [ ] Skapa `quality/run_checks.py` som anropas av Airflow-tasken
-- [ ] Integrera `quality_check_silver` som ny task i `github_lake_dag.py`
-- [ ] Logga check-resultat till `data/quality_reports/` för historisk spårbarhet
+- [x] Lägg till `soda-core-duckdb` eller `soda-core-spark` i `pyproject.toml`
+- [x] Skapa `quality/checks/silver_checks.yml` med kontrakten ovan
+- [x] Skapa `quality/run_checks.py` som anropas av Airflow-tasken
+- [x] Integrera `quality_check_silver` som ny task i `github_lake_dag.py`
+- [/] Logga check-resultat till `data/quality_reports/` för historisk spårbarhet
 
 ---
 

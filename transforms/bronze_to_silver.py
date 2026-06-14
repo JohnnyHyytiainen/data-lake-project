@@ -140,7 +140,7 @@ def _transform(df_bronze: DataFrame) -> DataFrame:
             ),
             F.lit(False),
         ).alias("pr_merged"),
-        F.col("created_at").cast("string"),
+        F.to_timestamp(F.col("created_at")).alias("created_at"),
     )
 
 
