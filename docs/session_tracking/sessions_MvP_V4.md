@@ -27,5 +27,10 @@
         - **Done**
 
     5) Update my `github_lake_dag.py` - and add the new task.
-        - *ongoing*
+        - **Done**
+
+    6) Write docs and update ROADMAP.md with current status for everything
+        - **Done**
+
+        
     
