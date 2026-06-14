@@ -8,7 +8,7 @@ from loguru import logger
 #             -v .../data:/app/data data-lake-project-quality \
 #             python /app/quality/diagnose.py
 
-
+# PATHING - TODO: refactor och bryt ut dessa och skriv in i min config.py vid fungerande första PoC körning.
 SILVER_PARQUET_GLOB = "/app/data/silver/events/**/*.parquet"
 TEMP_DB_PATH = "/tmp/soda_silver.duckdb"
 CHECKS_FILE = "/app/quality/checks/silver_checks.yml"
