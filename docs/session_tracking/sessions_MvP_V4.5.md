@@ -5,4 +5,4 @@
 *Goals for today:*
 
 - Explore my silver data and bronze data even further before MVP v5 starts.
-    - *ongoing*
+    - **Done**
