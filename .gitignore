@@ -123,3 +123,6 @@ kafka-logs/
 serving/grafana/plugins/
 # --- Undantag för Grafana-konfiguration ---
 !/serving/grafana/dashboards/*.json         
+
+# --- EDA NOTEBOOKS ---
+notebooks/
