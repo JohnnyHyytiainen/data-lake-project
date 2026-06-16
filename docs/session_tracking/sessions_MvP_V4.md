@@ -32,5 +32,15 @@
     6) Write docs and update ROADMAP.md with current status for everything
         - **Done**
 
-        
+
+--- 
+**Tuesday 16/06-2026**
+*Goals for today:*
+- Update my circuit breaker to relax my data contracts a bit, running diagnostics I found 2 duplicate events. Will document it as a known limitation and clean it up in upcoming `Tech-debt`-sprint prior to MVP v6.
+    - **Done**
+
+- Start working on last step for MVP v4
+    *Ongoing*
+
+
     

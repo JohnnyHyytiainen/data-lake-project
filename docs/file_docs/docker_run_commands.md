@@ -60,3 +60,13 @@
 
 * Once verified that the `quality`-image exists, restart the Airflow-scheduler so that it picks up the changed made in the `DAGs` order:
     * `docker compose restart airflow-scheduler `
+
+---
+
+## To run diagnose_soda.py script:
+
+* To run diagnostics script on soda(`diagnose_soda.py`) use this command in bash terminal:
+
+    * ` MSYS_NO_PATHCONV=1 docker run --rm -v "C:/Users/johnn/Desktop/projekt/data-lake-project/quality:/app/quality" -v "C:/Users/johnn/Desktop/projekt/data-lake-project/data:/app/data" data-lake-project-quality python /app/quality/diagnose.py `
+
+- Reason its with `MSYS_NO_PATHCONV=1` is because of normal Git Bash issues. Git bash is trying to be helpful and converts `/app/quality/diagnose_soda.py` to a windows path automatically. That is why I can see `C:/Program Files/Git/app/quality/diagnose_soda.py` in the error message.
