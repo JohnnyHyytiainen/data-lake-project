@@ -42,5 +42,10 @@
 - Start working on last step for MVP v4 (Logging check-results `data/quality_reports/` for historic traceability)
     *Ongoing*
 
+- Write docs regarding `quality_repots` and what it is, and more importantly **WHY** its **NEEDED**
+    - *ongoing*
+
+    
+
 
     
