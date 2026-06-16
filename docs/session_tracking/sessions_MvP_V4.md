@@ -39,8 +39,14 @@
 - Update my circuit breaker to relax my data contracts a bit, running diagnostics I found 2 duplicate events. Will document it as a known limitation and clean it up in upcoming `Tech-debt`-sprint prior to MVP v6.
     - **Done**
 
-- Start working on last step for MVP v4
-    *Ongoing*
+- Start working on last step for MVP v4 (Logging check-results `data/quality_reports/` for historic traceability)
+    **Done**
+
+- Write docs regarding `quality_repots` and what it is, and more importantly **WHY** its **NEEDED**
+    - **Done**
+
+
+    
 
 
     

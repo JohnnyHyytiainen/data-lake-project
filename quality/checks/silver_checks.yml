@@ -58,9 +58,3 @@ checks for silver_events:
           'review_request_removed', 'edited', 'locked', 'unlocked'
         )
       samples limit: 50
-
-    # Tillåter upp till 10 cross-run duplikater som känd arkitekturbegränsning
-    # Root cause: dropDuplicates() opererar bara inom en PySpark-batch
-    # Permanent fix: Silver-deduplicering i MVP v5
-  - duplicate_count(event_id) < 10:
-      name: event_id duplicates within acceptable limits
