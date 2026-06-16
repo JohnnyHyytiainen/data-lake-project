@@ -70,3 +70,47 @@
     * ` MSYS_NO_PATHCONV=1 docker run --rm -v "C:/Users/johnn/Desktop/projekt/data-lake-project/quality:/app/quality" -v "C:/Users/johnn/Desktop/projekt/data-lake-project/data:/app/data" data-lake-project-quality python /app/quality/diagnose.py `
 
 - Reason its with `MSYS_NO_PATHCONV=1` is because of normal Git Bash issues. Git bash is trying to be helpful and converts `/app/quality/diagnose_soda.py` to a windows path automatically. That is why I can see `C:/Program Files/Git/app/quality/diagnose_soda.py` in the error message.
+
+
+
+## To rebuild my quality circuit breaker
+
+* To rebuild my circuit breaker and test it:
+    * ` docker compose build quality `
+    * ` docker compose run --rm quality `
+
+* To verity that the repport landed locally on the host machine:
+    * ` ls -la data/quality_reports/ `
+    * ` cat data/quality_reports/$(ls data/quality_reports/ | tail -1) `
+
+
+
+## MANUAL TRIGGERS
+dbt och quality har `profiles: manual`, de startas ALDRIG av `docker compose up -d`.
+I normal drift triggas de av Airflow DAGen automatiskt.
+
+### Kör isolerat (för testning utan Airflow)
+* ` docker compose run --rm dbt `        <- kör dbt run mot Silver till Gold
+* ` docker compose run --rm quality `    <- kör Soda scan mot Silver Parquet
+
+### Bygg om efter Dockerfile-ändringar
+* ` docker compose build dbt `           <- rebuild dbt-imagen
+* ` docker compose build quality `       <- rebuild quality-imagen
+
+### Efter nuke, rätt ordning
+1. ` docker compose up -d `            <- startar Kafka, Spark, Airflow, Grafana
+2. Trigga DAGen manuellt i Airflow UI (localhost:8081)
+   ELLER kör isolerat för snabbtest:
+   docker compose run --rm quality
+   docker compose run --rm dbt
+
+
+##  Examples on my manual triggers:
+
+* Re-build my dbt:
+    * ` docker compose run --rm dbt `       <- kör dbt, bygger inte om
+    * ` docker compose build quality `      <- bygger quality-imagen, ej dbt
+
+* Re-build my quality:
+    * ` docker compose run --rm quality `   <- kör quality, bygger inte om  
+    * ` docker compose build dbt `          <- bygger dbt-imagen, ej quality
