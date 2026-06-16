@@ -4,9 +4,9 @@ import duckdb
 from loguru import logger
 
 # Manuellt diagnostikverktyg — körs INTE av Airflow.
-# Användning: docker run --rm -v .../quality:/app/quality \
-#             -v .../data:/app/data data-lake-project-quality \
-#             python /app/quality/diagnose.py
+# Användning (Kör det som en enda lång rad utan backslashes, det är alltid säkrast i Git Bash på Windows):
+
+# docker run --rm -v "C:/Users/johnn/Desktop/projekt/data-lake-project/quality:/app/quality" -v "C:/Users/johnn/Desktop/projekt/data-lake-project/data:/app/data" data-lake-project-quality python /app/quality/diagnose_soda.py
 
 # PATHING - TODO: refactor och bryt ut dessa och skriv in i min config.py vid fungerande första PoC körning.
 SILVER_PARQUET_GLOB = "/app/data/silver/events/**/*.parquet"
