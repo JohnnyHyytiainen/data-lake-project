@@ -112,7 +112,26 @@ services:
     environment:
       DBT_PROFILES_DIR: /app/dbt
 
-# ======== Airflow - PostgreSQL state-databas ========
+
+  # ======== Quality (Soda Core) ========
+  # Körs EJ vid docker compose up (profiles: manual)
+  # Startas av Airflow som DockerOperator-task: quality_check_silver
+  # Manuell testning: docker compose run --rm quality
+  quality:
+    build:
+      context: .
+      dockerfile: Dockerfile.quality
+    container_name: quality
+    command: ["python", "/app/quality/run_checks.py"]
+    profiles:
+      - manual
+    volumes:
+      - ./quality:/app/quality
+      - ./data:/app/data
+
+
+
+  # ======== Airflow - PostgreSQL state-databas ========
   postgres:
     image: postgres:16
     container_name: postgres

@@ -93,6 +93,7 @@ with DAG(
         auto_remove="success",
         docker_url="unix://var/run/docker.sock",
         working_dir="/app",
+        network_mode="data-lake-network",
     )
 
     # TASK 3) dbt, Silver -> Gold layer. DockerOperator bygger på dbt imagen och kör dbt run
