@@ -163,7 +163,7 @@ Logiska konsistenskontroller:
 - [x] Skapa `quality/checks/silver_checks.yml` med kontrakten ovan
 - [x] Skapa `quality/run_checks.py` som anropas av Airflow-tasken
 - [x] Integrera `quality_check_silver` som ny task i `github_lake_dag.py`
-- [/] Logga check-resultat till `data/quality_reports/` för historisk spårbarhet
+- [x] Logga check-resultat till `data/quality_reports/` för historisk spårbarhet
 
 ---
 
