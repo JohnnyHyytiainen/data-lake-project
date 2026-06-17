@@ -30,3 +30,7 @@ Renaming a `schema` isnt as "easy" as it sounds. It can and probably *will* have
 8) `Soda quality checks` are ran, either through `Airflow DAGs` or manually. Here I will Validate that `event_action` exists and the Data contracts are held.
 
 9) `docker compose build dbt` + `docker compose run --rm dbt` - Golden layer is recreated from the new Silver layers data.
+
+---
+
+- `de_community.json` will not be touched. Grafana reads the gold tables and `event_action` isnt exposed as a column in my gold output. It gets filtered in `WHERE`-satatements in the marts but never shows up in the `Gold`-tables `SELECT`
