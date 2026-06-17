@@ -203,11 +203,13 @@ The dashboard (`de_community.json`) and datasource config (`duckdb.yml`) are com
 | `v3.0.0` | Airflow orchestration, dbt Gold models, Grafana serving |
 | `v3.0.1` | Checkpoint fix, PySpark unit tests restored (12/12 green) |
 | `v3.0.2` | Serving layer rebuilt, Grafana dashboard verified |
+| `v4.5.0` | Deeper EDA for insights regarding data prior to writing new marts |
+
 
  
-**Current:** MVP v4 - data quality contracts (Soda Core as Silver -> Gold gatekeeper in Airflow).  
-**Next:** MVP v5 - Deeper analysis and broader/wider insights from Githubs Data.
- 
+**Current:** MVP v5 - Deeper analysis and broader/wider insights from Githubs Data. 
+**Next:** MVP v6 - Cloud och RAG
+
 --> [Full Roadmap](ROADMAP.md)
  
 ---
