@@ -4,7 +4,6 @@
 import duckdb
 
 
-
 # Verifiera att GROUP BY + MIN producerar exakt en rad per PR
 result = duckdb.sql("""
     SELECT COUNT(*) AS unika_merged_prs
