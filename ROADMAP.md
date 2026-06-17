@@ -167,6 +167,29 @@ Logiska konsistenskontroller:
 
 ---
 
+## MVP v4.5 - EDA sprint för djupare insikter kring bronze, silver datan. 
+
+**Setup:**
+- [x] Skapa `notebooks/`-mapp
+- [x] Lägg till `notebooks/*.ipynb` i `.gitignore`
+- [x] Verifiera att `duckdb`, `ipykernel`, `pandas` finns i `pyproject.toml`
+
+**Bronze:**
+- [x] Läs en dag av Bronze Parquet, inspektera schema
+- [x] Dokumentera payload-struktur per event-typ i Markdown-cell
+
+**Silver:**
+- [x] DESCRIBE Silver + verifiera alla kolumner och typer
+- [x] Volym per månad (trendgraf)
+- [x] Event-typ distribution
+- [x] Null-rates per kolumn
+- [x] Actor-login bot-mönster analys
+- [x] pr_action kontaminations audit
+
+**Dokumentation:**
+- [x] Skriv `docs/SILVER_SCHEMA.md`
+- [x] Skriv `docs/EDA_FINDINGS.md`
+
 ## MVP v5 - Djupare Analys och Bredare Insikter ifrån Githubs data.
 *Mål: Sommaren 2026*
 
