@@ -32,11 +32,22 @@ with
         SELECT
             repo_name,
             pr_number,
-            created_at AS closed_at
+            -- MIN() == Defensig aggregering. Github merge queue skickar ibland fler events
+            -- för SAMMA merge-action (closed+True OCH merged+False).
+            -- GROUP BY garanterar EXAKT en rad per PR till joined-CTE'n
+            -- för de ish 70x PRs med duplicates är glipan sekunder vilket är försumbart i timmar.
+            MIN(created_at) AS closed_at
         FROM
             pr_events
         WHERE
+            -- Typ 2: Github Merge Queue (från 2023+)
+            -- Triggar eget event: action='merged', pr_merged är False i Payload
             pr_action = 'merged'
+            -- Typ 1: Vanlig github merge via Merge knappen
+            -- action='closed', pr_merge=True i Payload
+            OR (pr_action = 'closed' AND pr_merged = True)
+        GROUP BY
+            repo_name, pr_number
     ),
     joined AS (
         SELECT
