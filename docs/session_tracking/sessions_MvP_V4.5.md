@@ -1,5 +1,6 @@
 # Session tracking notes for MVP v4.5.0 - Deeper Exploratory Data Analysis of silver + bronze layer
-*ongoing since 2026-06-16*
+*Started 2026-06-16*
+**Done 2026-06-17**
 
 **Tuesday 16/06-2026**
 *Goals for today:*
@@ -15,4 +16,3 @@
 - Update my EDA findings in docs/file_docs/EDA_FINDINGS.md
     - **Done**
 
-    
