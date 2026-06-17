@@ -6,3 +6,13 @@
 
 - Explore my silver data and bronze data even further before MVP v5 starts.
     - **Done**
+
+---
+
+**Wednesday 17/06-2026**
+*Goals for today:*
+
+- Update my EDA findings in docs/file_docs/EDA_FINDINGS.md
+    - **Done**
+
+    
