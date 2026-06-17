@@ -198,6 +198,7 @@ Syfte: Nu när pipelinen är tillförlitlig och datakvaliteten är garanterad ä
 ### Bot-klassificering som Silver-kolumn
 
 EDA-observation: många `actor_login`-värden innehåller "bot" - men ett namnbaserat filter är bara den enklaste heuristiken. 
+
 I MVP v5 lägger jag till `is_bot BOOLEAN` som en explicit Silver-kolumn.
 
 **Varför i Silver och inte i Gold?** Klassificeringen är en egenskap hos *aktören* och inte hos en specifik aggregering. Samma `is_bot`-logik används av alla Gold-modeller utan att duplicera logiken - Menat att vara `DRY` fast på datanivå.

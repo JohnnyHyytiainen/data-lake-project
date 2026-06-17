@@ -11,12 +11,6 @@ Om jag ska riva en innervägg i min lägenhet och byta ut den för att ha en öp
 - Sanity check scriptet:
 
 ```python
-# Kommentarer: Svenska
-# Kod: Engelska
-# Sanity check script, se docs/file_docs/sanity_check_mvp5.md
-import duckdb
-
-
 result = duckdb.sql("""
     SELECT
         repo_name,
