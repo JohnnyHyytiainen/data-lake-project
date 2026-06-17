@@ -13,3 +13,8 @@
     - **Done**
 
 
+---
+**Wednesday 2026-06-17**
+*Goals for today:*
+- Start working on a `schema renaming cascade` - Rename `pr_action` to `event_action` for future clarity.
+    - *ongoing* 
