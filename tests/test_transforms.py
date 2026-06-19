@@ -149,7 +149,7 @@ class TestTransform:
             "repo_name",
             "repo_id",
             "commit_count",
-            "pr_action",
+            "event_action",
             "pr_merged",
             "pr_number",
             "created_at",
@@ -253,7 +253,7 @@ class TestTransform:
         row = _transform(df).collect()[0]
 
         assert row["pr_number"] == 42
-        assert row["pr_action"] == "opened"
+        assert row["event_action"] == "opened"
 
     # Test för pr merges som varit problematiskt innan
     def test_pr_merged_is_always_false_due_to_github_api_quirk(self, spark):
@@ -264,7 +264,7 @@ class TestTransform:
         ALL rows, even those that are actually merged.
 
         The pr_merged column is practically useless for identifying
-        merged PRs. Use pr_action = 'merged' instead.
+        merged PRs. Use event_action = 'merged' instead.
 
         This test exists to DOCUMENT the behavior in code,
         not because it is desirable. If GitHub ever changes its API
@@ -283,8 +283,8 @@ class TestTransform:
 
         # pr_merged är False trots att payload säger True - GitHub API-quirk
         assert row["pr_merged"] is False
-        # pr_action är däremot korrekt, det rätta sättet att hitta merged PRs
-        assert row["pr_action"] == "merged"
+        # event_action är däremot korrekt, det rätta sättet att hitta merged PRs
+        assert row["event_action"] == "merged"
 
     # test för partitionkeys med zero-padding
     # se hive-style partitioning. Rätt format = month=02, day=09

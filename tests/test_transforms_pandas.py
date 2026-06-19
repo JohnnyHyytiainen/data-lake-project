@@ -136,7 +136,7 @@ class TestFlatten:
         result = _flatten(valid_pr_event)
 
         assert result["pr_merged"] is True
-        assert result["pr_action"] == "closed"
+        assert result["event_action"] == "closed"
         assert result["commit_count"] == 0  # PRs har ingen payload.size
 
     def test_missing_optional_fields_get_defaults(self, valid_push_event):
@@ -151,7 +151,7 @@ class TestFlatten:
         result = _flatten(valid_push_event)
 
         assert result["commit_count"] == 0
-        assert result["pr_action"] is None
+        assert result["event_action"] is None
         assert result["pr_merged"] is False
 
     # Mest subtilt värdefulla testet. Fungerar som ett schema kontrakt.
@@ -169,7 +169,7 @@ class TestFlatten:
             "repo_name",
             "repo_id",
             "commit_count",
-            "pr_action",
+            "event_action",
             "pr_merged",
             "created_at",
         }
