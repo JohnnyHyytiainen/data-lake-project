@@ -29,18 +29,18 @@
 - Implement working schema change/schema update - Rename `pr_action` to `event_action` for future clarity.
     - First go through these scripts:
     - `bronze_to_silver.py` + `test_transforms.py` then validate it
-        - *ongoing* 
+        - **Done** 
 
 - Validate transformation logic that the current schema change is working by running `pytest`-locally
-    - *ongoing*
+    - **Done**
 
 - Keep on working upwards with schema change
-    - *ongoing*
+    - **Done**
 
     
 
 - After schema change, look into my postgres DB acting odd after complete rebuild. Investigate logs showing:
-    - *ongoing* 
+    - **ongoing** 
 
 ```
 2026-06-19 13:25:31.888 UTC [27] LOG:  checkpoint starting: time
