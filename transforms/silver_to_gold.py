@@ -133,7 +133,7 @@ def build_pr_cycle_times(df_silver) -> None:
     # alias() ger varje view ett unikt namn så att Spark kan skilja dom åt när de joinas.
     # Utan alias vet inte Spark vilket 'repo_name' jag menar i scriptet.
     df_opened = (
-        df_pr.filter(F.col("pr_action") == "opened")
+        df_pr.filter(F.col("event_action") == "opened")
         .select(
             F.col("repo_name"),
             F.col("pr_number"),  # <--- NY EFTER CARTESIAN PRODUCT TABBEN
@@ -143,7 +143,7 @@ def build_pr_cycle_times(df_silver) -> None:
     )
 
     df_closed = (
-        df_pr.filter((F.col("pr_action") == "closed") & F.col("pr_merged"))
+        df_pr.filter((F.col("event_action") == "closed") & F.col("pr_merged"))
         .select(
             F.col("repo_name"),
             F.col("pr_number"),  # <---- NY EFTER CARTESIAN PRODUCT TABBEN

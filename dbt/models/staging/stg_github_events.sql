@@ -20,7 +20,7 @@ SELECT
     -- dom är aldrig NULL här.
     commit_count,
     pr_number,
-    pr_action, -- NULL för icke PR events. Förväntat beteende
+    event_action, -- NULL för icke PR events. Förväntat beteende
     pr_merged, -- NULL för icke PR events
     cast(year as integer) AS year,
     cast(month as integer) AS month,
