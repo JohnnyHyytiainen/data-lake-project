@@ -16,5 +16,15 @@
 ---
 **Wednesday 2026-06-17**
 *Goals for today:*
-- Start working on a `schema renaming cascade` - Rename `pr_action` to `event_action` for future clarity.
+- Start writing docs for schema renaming and schema change, 2 "phases", 9 steps
+    **Done**
+
+
+---
+
+**Friday 2026-06-19**
+*Goals for today:*
+
+
+- Implement working schema change/schema update - Rename `pr_action` to `event_action` for future clarity.
     - *ongoing* 
