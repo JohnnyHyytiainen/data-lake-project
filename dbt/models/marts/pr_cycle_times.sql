@@ -9,7 +9,7 @@ with
         SELECT
             repo_name,
             pr_number,
-            pr_action,
+            event_action,
             pr_merged,
             created_at
         FROM
@@ -26,7 +26,7 @@ with
         FROM
             pr_events
         WHERE
-            pr_action = 'opened'
+            event_action = 'opened'
     ),
     closed AS (
         SELECT
@@ -42,10 +42,10 @@ with
         WHERE
             -- Typ 2: Github Merge Queue (från 2023+)
             -- Triggar eget event: action='merged', pr_merged är False i Payload
-            pr_action = 'merged'
+            event_action = 'merged'
             -- Typ 1: Vanlig github merge via Merge knappen
             -- action='closed', pr_merge=True i Payload
-            OR (pr_action = 'closed' AND pr_merged = True)
+            OR (event_action = 'closed' AND pr_merged = True)
         GROUP BY
             repo_name, pr_number
     ),
