@@ -47,11 +47,11 @@ def diagnose_silver_data() -> None:
         "null repo_name (ska vara 0)": "SELECT COUNT(*) FROM silver_events WHERE repo_name IS NULL",
         "null created_at (ska vara 0)": "SELECT COUNT(*) FROM silver_events WHERE created_at IS NULL",
         "duplicate event_id (ska vara 0)": "SELECT COUNT(*) - COUNT(DISTINCT event_id) FROM silver_events",
-        "PullRequestEvent utan pr_action (ska vara 0)": "SELECT COUNT(*) FROM silver_events WHERE event_type = 'PullRequestEvent' AND pr_action IS NULL",
+        "PullRequestEvent utan event_action (ska vara 0)": "SELECT COUNT(*) FROM silver_events WHERE event_type = 'PullRequestEvent' AND event_action IS NULL",
         "framtida timestamps (ska vara 0)": "SELECT COUNT(*) FROM silver_events WHERE TRY_CAST(created_at AS TIMESTAMP) > now()",
-        "okänt pr_action-värde (ska vara 0)": """SELECT COUNT(*) FROM silver_events 
-               WHERE pr_action IS NOT NULL 
-               AND pr_action NOT IN ('opened','closed','merged','reopened','synchronize','ready_for_review')""",
+        "okänt event_action-värde (ska vara 0)": """SELECT COUNT(*) FROM silver_events 
+               WHERE event_action IS NOT NULL 
+               AND event_action NOT IN ('opened','closed','merged','reopened','synchronize','ready_for_review')""",
     }
 
     for namn, query in checks.items():
@@ -59,16 +59,16 @@ def diagnose_silver_data() -> None:
         logger.info(f"  {namn}: {antal}")
 
     result = conn.execute("""
-        SELECT pr_action, COUNT(*) as antal
+        SELECT event_action, COUNT(*) as antal
         FROM silver_events
-        WHERE pr_action IS NOT NULL
-        AND pr_action NOT IN ('opened','closed','merged','reopened','synchronize','ready_for_review')
-        GROUP BY pr_action
+        WHERE event_action IS NOT NULL
+        AND event_action NOT IN ('opened','closed','merged','reopened','synchronize','ready_for_review')
+        GROUP BY event_action
         ORDER BY antal DESC
     """).fetchall()
 
     for rad in result:
-        logger.info(f"  Okänd pr_action: '{rad[0]}' — {rad[1]} rader")
+        logger.info(f"  Okänd event_action: '{rad[0]}' — {rad[1]} rader")
 
     conn.close()
     logger.info("=== DIAGNOSTIK KLAR ===")
