@@ -29,12 +29,12 @@ checks for silver_events:
 
   # === LOGICAL CONSISTENCY CONTROLS ===
 
-  # conditional control: Varje PullRequestEvent MÅSTE ha pr_action satt
+  # conditional control: Varje PullRequestEvent MÅSTE ha event_action satt
   # failed rows genererar: SELECT * FROM silver_events WHERE <fail_condition>
   # Om NÅGON rad returneras --> FAIL direkt(fail fast)
   - failed rows:
-      name: PullRequestEvent missing pr_action
-      fail condition: event_type = 'PullRequestEvent' AND pr_action IS NULL
+      name: PullRequestEvent missing event_action
+      fail condition: event_type = 'PullRequestEvent' AND event_action IS NULL
       samples limit: 50
 
   # Timestamps i framtiden = trasig "klocka" på producent sidan eller Data corruption
@@ -43,14 +43,14 @@ checks for silver_events:
       fail condition: TRY_CAST(created_at AS TIMESTAMP) > now()
       samples limit: 50
 
-    # Validerar BARA pr_action för faktiska PullRequestEvent rader.
+    # Validerar BARA event_action för faktiska PullRequestEvent rader.
     # Övriga event-typer har egna actions (started, created, forked)
     # lagrade i samma kolumn, det är ett känt schemaval, ej korruption.
   - failed rows:
-      name: PullRequestEvent has got an unknown pr_action value
+      name: PullRequestEvent has got an unknown event_action value
       fail condition: >
         event_type = 'PullRequestEvent'
-        AND pr_action NOT IN (
+        AND event_action NOT IN (
           'opened', 'closed', 'merged', 'reopened',
           'synchronize', 'ready_for_review', 'labeled',
           'unlabeled', 'assigned', 'unassigned',

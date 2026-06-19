@@ -133,7 +133,7 @@ def _transform(df_bronze: DataFrame) -> DataFrame:
             ),
             F.lit(0),
         ).alias("pr_number"),
-        F.get_json_object(F.col("payload"), "$.action").alias("pr_action"),
+        F.get_json_object(F.col("payload"), "$.action").alias("event_action"),
         F.coalesce(
             F.get_json_object(F.col("payload"), "$.pull_request.merged").cast(
                 "boolean"
