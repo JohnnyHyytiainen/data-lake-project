@@ -42,9 +42,14 @@
 **Saturday 2026-06-20**
 *Goals for today:*
 
-- Branch out and start working on `is_bot` column to identify bot actors in my data
+- Write docs regarding `is_bot` and how to approach this problem.
     - *ongoing*
 
+- Write unit test to test my `is_bot`-classifying logic before implementing/refactoring `bronze_to_silver.py` script.
+    - *ongoing*
+
+- Branch out and start working on `is_bot` column to identify bot actors in my data
+    - *ongoing*
 
 
 

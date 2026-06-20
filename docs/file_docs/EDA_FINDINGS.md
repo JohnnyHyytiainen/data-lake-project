@@ -51,7 +51,7 @@
 - Bör jag justera DE_KEYWORDS-filtret i MVP v5? `Ja`, har förslag kring hur listan ska utökas.
 
 
-### pr_action Kontaminering
+### event_action Kontaminering
 - Andel kontaminerade rader: `9.48%`, sammanfattningen ser ut så här:
 
 | total_rows | pr_event_rows | contaminated_rows | contamination_percent |
@@ -62,7 +62,7 @@
 
 - Bedömning: kosmetiskt / analytisk risk: `Kan vara analytisk risk, nästan 9.5% i datan, bör grävas djupare i och förstå varför.`
 
-- Prioritet på rename `pr_action` --> `event_action`: hög / medel / låg: `medel`
+- Prioritet på rename `event_action` --> `event_action`: hög / medel / låg: `medel`
 
 
 ### Bots
@@ -75,9 +75,9 @@
 ### Kända Begränsningar Verifierade
 - `pr_merged` alltid False: Bekräftat ✓ / Ej bekräftat ✗: `Ej bekräftat.`
 
-- `pr_action = 'merged'` som merge-indikator: Bekräftat ✓ / Ej bekräftat ✗: `Ej bekräftat`
+- `event_action = 'merged'` som merge-indikator: Bekräftat ✓ / Ej bekräftat ✗: `Ej bekräftat`
 
-| pr_action | pr_merged | count |
+| event_action | pr_merged | count |
 |:---|:---|:---|
 | assigned|	False|	4015|
 | closed|	False|	12242|
@@ -94,7 +94,7 @@
 ### Beslut för MVP v5
 - `is_bot`-klassificering: namnbaserad räcker / behöver beteendebaserat tillägg: `Ja, det BÖR räcka.`
 
-- `pr_action` -->  `event_action` rename: approach och timing: `Ja, jag bör döpa om. Absolut. Se findings under`
+- `event_action` -->  `event_action` rename: approach och timing: `Ja, jag bör döpa om. Absolut. Se findings under`
 
 - Silver-kolumner att lägga till: `Osäker`
 
@@ -148,7 +148,7 @@
 | repo_id|	VARCHAR|	YES|	None|	None|	None|
 | commit_count|	INTEGER|	YES|	None|	None|	None|
 | pr_number|	INTEGER|	YES|	None|	None|	None|
-| pr_action|	VARCHAR|	YES|	None|	None|	None|
+| event_action|	VARCHAR|	YES|	None|	None|	None|
 | pr_merged|	BOOLEAN|	YES|	None|	None|	None|
 | created_at|	TIMESTAMP|	YES|	None|	None|	None|
 | day|	VARCHAR|	YES|	None|	None|	None|
@@ -158,7 +158,7 @@
 ---
 
 **Hur ser silver datan ut?**
-| event_id | event_type | actor_login |	repo_name |	repo_id | commit_count | pr_number|	pr_action| pr_merged | created_at | day| month | year |
+| event_id | event_type | actor_login |	repo_name |	repo_id | commit_count | pr_number|	event_action| pr_merged | created_at | day| month | year |
 |:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|
 | 51530481835 | PushEvent|github-actions[bot]|RedHatInsights/ubi-trino|319443023	|1	|0	|NaN	|False	|2025-07-01 00:43:44	|01	|07 |2025|
 |51530511158|	IssueCommentEvent|	dependabot[bot]|	mbhavya/prefect|	394979719|	0|	0|	created|	False|	2025-07-01 00:45:05|	01|	07|	2025|
@@ -247,9 +247,9 @@
 ---
 **MOTBEVISAD(?)**
 
-- PullRequestEvents: Vad är fördelningen i pr_actions? Merge PRs har pr_action = 'merged' INTE pr_action = 'closed' + pr_merged = True (github bootstrap quirk och kanske github api quirk)
+- PullRequestEvents: Vad är fördelningen i event_actions? Merge PRs har event_action = 'merged' INTE event_action = 'closed' + pr_merged = True (github bootstrap quirk och kanske github api quirk)
 
-| pr_action | count | percent |
+| event_action | count | percent |
 |:---|:---|:---|
 | opened | 122720 | 41.40 |
 | labeled | 75971 |	25.63 |
@@ -262,16 +262,16 @@
 
 ---
 
-## Sektion 4 - pr_action contamination audit
+## Sektion 4 - event_action contamination audit
 **Känt problem:**
-`get_json_object(payload, '$.action')` extraheras från *alla* event-typer till kolumnen `pr_action`.
+`get_json_object(payload, '$.action')` extraheras från *alla* event-typer till kolumnen `event_action`.
 `WatchEvent` har `action: 'started'`, `ForkEvent` har `action: 'forked'`.
-Kolumnen *heter* `pr_action` men innehåller egentligen `event_action`.
+Kolumnen *heter* `event_action` men innehåller egentligen `event_action`.
 
-Planerat fix i MVP v5: `pr_action` ska göras om till `event_action`.
+Planerat fix i MVP v5: `event_action` ska göras om till `event_action`.
 
 **Frågorna att besvara idag:**
-1. Hur stor % av alla rader har icke-null `pr_action` fast det INTE är `PullRequestEvent`?
+1. Hur stor % av alla rader har icke-null `event_action` fast det INTE är `PullRequestEvent`?
 2. Vilka action-värden kontaminerar kolumnen?
 3. Kosmetiskt problem eller analytisk risk?
 
@@ -279,10 +279,10 @@ Svaret avgör *prioriteten* på rename beslutet i MVP v5.
 
 ---
 
-- Icke pr events med icke null `pr_actions`, pr_action per event_type exkluderar PullRequestEvent
+- Icke pr events med icke null `event_actions`, event_action per event_type exkluderar PullRequestEvent
 
 
-| event_type | pr_action | count |
+| event_type | event_action | count |
 |:---|:---|:---|
 | IssueCommentEvent | created |	132992 |
 | WatchEvent | started | 81526 |
@@ -410,7 +410,7 @@ Svaret avgör *prioriteten* på rename beslutet i MVP v5.
 
 **Förväntat:**
     - `event_id`, `event_type`, `repo_name`, `created_at` bör vara 0% `NULL` pga mina data contracts i MVP v4.
-    - `pr_action`, `pr_number`, `pr_merged` bör ha ganska hög `null`-rate (enbart relevant för `PullRequestEvent)
+    - `event_action`, `pr_number`, `pr_merged` bör ha ganska hög `null`-rate (enbart relevant för `PullRequestEvent)
 
 Något oväntat här == Ny insikt som innebör ett potentiellt nytt `soda core`-`data contract` eller en `schema`-ändring i Silver.
 
@@ -421,7 +421,7 @@ Något oväntat här == Ny insikt som innebör ett potentiellt nytt `soda core`-
 
 | column | null_count | null_percent |
 |:---|:---|:---|
-| pr_action | 1876423.0 | 78.17 |
+| event_action | 1876423.0 | 78.17 |
 | event_type	| 0.0	|0.00 |
 | actor_login	| 0.0	|0.00 |
 | repo_name	| 0.0	|0.00 |
@@ -444,7 +444,7 @@ Något oväntat här == Ny insikt som innebör ett potentiellt nytt `soda core`-
 
 - Tre kända begränsningar att verifiera *empiriskt:* 
 1) `pr_merged` alltid `False` i silver. Beror på vad Bronze Payload faktiskt innehåller
-2) `pr_action = 'merged'` som merge indikator. Syns det *tydligt* i Bronze?
+2) `event_action = 'merged'` som merge indikator. Syns det *tydligt* i Bronze?
 3) `payload`-struktur per `event-type`, vad kan jag faktiskt extrahera?
 ---
 
@@ -465,9 +465,9 @@ Något oväntat här == Ny insikt som innebör ett potentiellt nytt `soda core`-
 
 ---
 **DEBUNKED OCH MOTBEVISAD**  
-- Är pr_merged alltid `False`? Verifierar en "känd" begränsning om att pr_merged alltid är false och att pr_action = 'merged' är en korrekt merge indikator
+- Är pr_merged alltid `False`? Verifierar en "känd" begränsning om att pr_merged alltid är false och att event_action = 'merged' är en korrekt merge indikator
 
-| pr_action | pr_merged | count |
+| event_action | pr_merged | count |
 |:---|:---|:---|
 | assigned|	False|	4015|
 | closed|	False|	12242|
