@@ -224,9 +224,9 @@ I MVP v5 lägger jag till `is_bot BOOLEAN` som en explicit Silver-kolumn.
 **Varför i Silver och inte i Gold?** Klassificeringen är en egenskap hos *aktören* och inte hos en specifik aggregering. Samma `is_bot`-logik används av alla Gold-modeller utan att duplicera logiken - Menat att vara `DRY` fast på datanivå.
 
 Klassificeringskriterier (steg 1 - namnbaserat):
-- [ ] `actor_login` innehåller `[bot]`, `-bot`, `_bot` (Github Apps-mönster)
-- [ ] `actor_login` börjar med `dependabot`, `renovate`, `github-actions`
-- [ ] Dokumentera kriterierna i egna docs **INNAN** kod börjar skrivas.
+- [x] `actor_login` innehåller `[bot]`, `-bot`, `_bot` (Github Apps-mönster)
+- [x] `actor_login` börjar med `dependabot`, `renovate`, `github-actions`
+- [x] Dokumentera kriterierna i egna docs **INNAN** kod börjar skrivas.
 
 Möjliga steg 2-kriterier (beteendebaserat):
 - Exakt regelbundna tidsintervall mellan events (< 5 sekunders variation)

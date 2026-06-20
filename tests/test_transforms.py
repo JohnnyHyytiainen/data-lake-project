@@ -153,6 +153,7 @@ class TestTransform:
             "pr_merged",
             "pr_number",
             "created_at",
+            "is_bot",
         }
         assert set(result.columns) == expected_columns
 

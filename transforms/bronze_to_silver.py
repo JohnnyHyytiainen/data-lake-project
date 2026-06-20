@@ -11,7 +11,7 @@ import json
 from datetime import datetime, timezone
 
 # PySpark imports
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession, DataFrame, Column
 from pyspark.sql import functions as F
 
 # Kör enbart på Windows/lokalt, i Docker hanteras Hadoop och Python-paths
@@ -95,6 +95,42 @@ def _save_checkpoint(processed_files: set[str]) -> None:
     logger.info(f"Checkpoint saved | {len(processed_files)} total processed files")
 
 
+# ======= BOT klassifiering =======
+# Namnbaserad bot klassifiering för MVP v5, sätter is_bot flagga med en Bool
+# Privat funktion, Fuck around and find out!!!
+def _classify_is_bot(actor_login: Column) -> Column:
+    """
+    Name-based bot classification (MVP v5, step 1), pure function of ONE
+    column, independent of the rest of the DataFrame schema.
+
+    Extracted into its own function for the same reason that _transform() was once
+    extracted from run_bronze_to_silver(): SoC. Makes logic testable with a
+    minimal mocked list of actor_login strings, without having to build
+    the entire Bronze schema (nested structs, payload-JSON) just for a string test.
+
+    Suffix/prefix only (endswith/startswith) — NEVER "contains". A bare
+    "contains" check will give false positives (example, "study_botanical").
+
+    Accepted limitations:
+    - "flinkbot" is missed (missing separator before "bot")
+    - behavior-based automation without name signature (high volume, 1 repo) is NOT
+    caught here, that belongs in a future dbt intermediate model (stage 2,
+    downstream, based on actor aggregation, not row-level logic)
+    """
+    # Coalesce till tom str om actor_login är null. Utan den blir is_bot null istället för False.
+    # Det bryter det planerade Soda kontraktet "is_bot IS NOT NULL"
+    login = F.lower(F.coalesce(actor_login, F.lit("")))
+
+    return (
+        login.endswith("[bot]")
+        | login.endswith("-bot")
+        | login.endswith("_bot")
+        | login.endswith("dependabot")
+        | login.endswith("renovate")
+        | login.endswith("github-actions")
+    )
+
+
 # ======= Transform funktion =======
 # Extraherar transformationslogiken till egen separat funktion.
 # Priv funktion, FAAFO
@@ -141,6 +177,8 @@ def _transform(df_bronze: DataFrame) -> DataFrame:
             F.lit(False),
         ).alias("pr_merged"),
         F.to_timestamp(F.col("created_at")).alias("created_at"),
+        # NY MVP 5 BOT FLAGGA
+        _classify_is_bot(F.col("actor.login")).alias("is_bot"),
     )
 
 
