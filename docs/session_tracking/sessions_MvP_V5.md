@@ -43,13 +43,10 @@
 *Goals for today:*
 
 - Write docs regarding `is_bot` and how to approach this problem.
-    - *ongoing*
-
-- Write unit test to test my `is_bot`-classifying logic before implementing/refactoring `bronze_to_silver.py` script.
-    - *ongoing*
+    - **Done**
 
 - Branch out and start working on `is_bot` column to identify bot actors in my data
-    - *ongoing*
+    - **Done**
 
 
 

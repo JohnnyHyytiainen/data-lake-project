@@ -74,3 +74,6 @@ df = df.withColumn(
 
 ## Testing
 * Before I implement this filter for bots I should also write tests to evaluate my logic with a mocked list of names, with a few names like `["abbot", "my-bot", "Johnny", "DePenDaBOT", "Lovable[bot], ..., ....]` **BEFORE** I run the entire pipeline.
+
+* Running isolated `test_bot_classification.py` script:
+    * ` uv run pytest tests/test_bot_classification.py -v `

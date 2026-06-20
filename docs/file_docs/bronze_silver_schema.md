@@ -22,7 +22,7 @@
 
 
 ## Silver schema:
-- Antal columns i silver är: 13
+- antal columns i silver är: 14
 
 | column_name | column_type | null | key | default | extra |
 |:---|:---|:---|:---|:---|:---|
@@ -33,9 +33,10 @@
 | repo_id|	VARCHAR|	YES|	None|	None|	None|
 | commit_count|	INTEGER|	YES|	None|	None|	None|
 | pr_number|	INTEGER|	YES|	None|	None|	None|
-| pr_action|	VARCHAR|	YES|	None|	None|	None|
+| event_action|	VARCHAR|	YES|	None|	None|	None|
 | pr_merged|	BOOLEAN|	YES|	None|	None|	None|
 | created_at|	TIMESTAMP|	YES|	None|	None|	None|
+| is_bot|	BOOLEAN|	YES|	None|	None|	None | 
 | day|	VARCHAR|	YES|	None|	None|	None|
 | month|	VARCHAR	|YES	|None	|None	|None|
 | year|	BIGINT|	YES|	None|	None|	None|
