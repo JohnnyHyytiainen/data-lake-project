@@ -195,6 +195,26 @@ Logiska konsistenskontroller:
 
 Syfte: Nu när pipelinen är tillförlitlig och datakvaliteten är garanterad är det dags att ställa mer intressanta och relevata frågor. MVP v5 expanderar Silver-schemat med klassificerade attribut och bygger nya Gold-modeller.
 
+### Refaktorisera `pr_cycle_times.sql` 
+Bug och felande logik hittad och `pr_cycle_times.sql`-mart refactor
+
+- [x] `dbt/models/marts/pr_cycle_times.sql` buggen identifierad och fixad
+
+**Validerat:** `total_rows = distinct_prs` bekräftat via inline dbt-query
+(ingen fan-out i joinen)
+
+### Refaktorisera de filer som innehåller `pr_action` --> `event_action` 
+Refactor dom script som innehåller `pr_action` och ändra det till `event_action` för att byta namn på `pr_action`-column. Så kallad *Breaking Schema Change*.
+
+- [x] `bronze_to_silver.py`
+- [x] `test_transforms.py`
+- [x] `silver_to_gold.py`
+- [x] `silver_checks.yml`
+- [x] `diagnose_soda.py`
+- [x] `stg_github_events.sql`
+- [x] `pr_cycle_times.sql`
+
+
 ### Bot-klassificering som Silver-kolumn
 
 EDA-observation: många `actor_login`-värden innehåller "bot" - men ett namnbaserat filter är bara den enklaste heuristiken. 
