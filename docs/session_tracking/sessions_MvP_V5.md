@@ -37,10 +37,23 @@
 - Keep on working upwards with schema change
     - **Done**
 
-    
+---
+
+**Saturday 2026-06-20**
+*Goals for today:*
+
+- Branch out and start working on `is_bot` column to identify bot actors in my data
+    - *ongoing*
+
+
+
+
+
+
+## TODO TECH DEBT SECTION:
 
 - After schema change, look into my postgres DB acting odd after complete rebuild. Investigate logs showing:
-    - **ongoing** 
+    - *ongoing*
 
 ```
 2026-06-19 13:25:31.888 UTC [27] LOG:  checkpoint starting: time
