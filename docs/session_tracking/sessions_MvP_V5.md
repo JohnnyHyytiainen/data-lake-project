@@ -54,6 +54,7 @@
 **Monday 2026-06-22**
 *Goals for today:*
 
+*Intermediate model*
 - Write docs regarding todays session and what is needed to implement an `intermediate/layer`, not in silver since that requires a `GROUP BY`-aggregation on the *ENTIRE* dataset instead of on each row.
     - **Done**
 
@@ -63,6 +64,14 @@
 - Write a new `dbt/models/intermediate/DBT_MODEL_NAME.sql` script to aggregate `event_count`, `unique_event_types`, `unique_repos` per `actor_login` from my staging model `stg_github_events`.
     - **Done**
 
+
+*dbt mart*
+- Start writing docs regarding upcoming `gold` `mart` to identify "suspicious bot behaviour"
+    - *ongoing*
+
+
+- Start writing dbt `bot_vs_human_activity.sql`-mart
+    *ongoing*
 
 
 
