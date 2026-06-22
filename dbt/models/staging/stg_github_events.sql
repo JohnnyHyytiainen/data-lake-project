@@ -22,6 +22,7 @@ SELECT
     pr_number,
     event_action, -- NULL för icke PR events. Förväntat beteende
     pr_merged, -- NULL för icke PR events
+    is_bot, -- staging är 1:1 mot silver
     cast(year as integer) AS year,
     cast(month as integer) AS month,
     cast(day as integer) AS day,
