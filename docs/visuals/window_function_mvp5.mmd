@@ -1,0 +1,5 @@
+flowchart TD
+    A["stg_github_events<br/>grain: en rad per event"] -->|"actor_login, event_type,<br/>created_at"| C["bot_vs_human_activity.sql"]
+    B["int_actor_behavior<br/>grain: en rad per aktör"] -->|"is_bot, unique_repos,<br/>unique_event_types, event_count"| C
+    C -->|"GROUP BY week_start,<br/>event_type, actor_category"| D[("Gold table<br/>grain: vecka × event_typ × kategori")]
+    D --> E["Grafana-panel"]

@@ -14,7 +14,7 @@
 **Materialization choice** for `int_actor_behavior`: `view`, for the same reasons as `staging`. Its not a business case *yet*, it's a building block. Making it a `VIEW` (not TABLE) means it's always live against the latest `Silver data`, no extra rebuild discipline to keep track of, and I can still query it directly (`SELECT * FROM int_actor_behavior`) for `sanity checks` in my regular `sanity_checks/`-folder, unlike ephemeral materialization, where dbt bakes in the `SQL` as a `CTE` and I never get a `queryable object` to target `sanity checks` against.
 
 
----
+- `int_actor_behavior` will be kept as a pure aggregation, no threshold values what so ever.
 
 ## Bonus: What I should have in the portfolio if someone would ask.
 I should have `dbt docs generate` + `dbt docs serve` to automatically generate a visual DAG of all my models and their `ref()`-dependencies. It'll cost 5 minutes of my time but gives a real and concrete picture over the entire data lineage chain.
