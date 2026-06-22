@@ -1,0 +1,13 @@
+flowchart TD
+    A[Bot-signaler bortom namnet] --> B[Byggbara nu, befintligt schema]
+    A --> C[Kräver ny approach/tech]
+
+    B --> B1["Volym + diversitet<br/>(redan: int_actor_behavior)"]
+    B --> B2["Self-merge ratio<br/>samma actor öppnar OCH stänger en PR"]
+    B --> B3["Temporal regularitet<br/>aktivitet jämn över alla 24h/7 dagar"]
+    B --> B4["Burstiness<br/>events per minut, onormalt högt"]
+    B --> B5["PR-cykeltid per aktör<br/>återanvänder opened/closed-mönstret"]
+
+    C --> C1["Commit-meddelande-mönster<br/>kräver payload-text i Silver"]
+    C --> C2["Kontoålder<br/>kräver GitHub User API, ny källa"]
+    C --> C3["Nätverkssignaler<br/>IP/User-Agent, ej i Events API"]
