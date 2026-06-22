@@ -57,9 +57,11 @@
 - Write docs regarding todays session and what is needed to implement an `intermediate/layer`, not in silver since that requires a `GROUP BY`-aggregation on the *ENTIRE* dataset instead of on each row.
     - **Done**
 
+- Write sanity-check script to validate my logic and not get any unwanted issues downstream when building new marts. Script is `is_bot_sanity_intermediate_model.py`.
+    - **Done**
 
 - Write a new `dbt/models/intermediate/DBT_MODEL_NAME.sql` script to aggregate `event_count`, `unique_event_types`, `unique_repos` per `actor_login` from my staging model `stg_github_events`.
-    - *ongoing*
+    - **Done**
 
 
 
