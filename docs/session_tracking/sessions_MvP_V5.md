@@ -67,7 +67,7 @@
 
 *dbt mart*
 - Start writing docs regarding upcoming `gold` `mart` to identify "suspicious bot behaviour"
-    - *ongoing*
+    - **Done**
 
 
 - Start writing dbt `bot_vs_human_activity.sql`-mart
