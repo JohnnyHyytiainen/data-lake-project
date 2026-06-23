@@ -77,3 +77,39 @@ df = df.withColumn(
 
 * Running isolated `test_bot_classification.py` script:
     * ` uv run pytest tests/test_bot_classification.py -v `
+
+
+---
+
+## Bots on Github
+
+**`[bot]`-suffixet är Githubs egen mekanism för att identifiera bots**, inte en "guideline". När någon registrerar en Github App lägger Github *automatiskt* till `[bot]` på dess identitet. Det är så nära en officiell sanning Jag kan komma utan att fråga Githubs API direkt.
+
+**`-bot`/`_bot`-suffixet och `dependabot`/`renovate`/`github-actions`-prefixen är däremot en community "konvention"**, inte en Github regel. Jag känner redan igen de namnen för att de är väletablerade, kända automationsverktyg, men att matcha på prefix/suffix är *min* heuristik baserad på igenkänning, inte något Github garanterar eller kräver av någon.
+
+Den distinktionen spelar roll. T.ex om någon frågar: "är det här en av Githubs regler eller är det ditt eget antagande?"  Här är svaret istället för att jag ska klumpa ihop allt under "per Githubs guidelines"
+
+---
+* **Hur identifieras en bot då?**
+
+```mermaid
+flowchart TD
+    A["actor_login finns i<br/>int_actor_behavior?"] -->|Nej| U["unknown"]
+    A -->|Ja| B{"is_bot = true?<br/>Github-mekanism + konvention<br/>(track 1, hög konfidens)"}
+    B -->|Ja| BOT["bot"]
+    B -->|Nej| C{"is_suspected_behavioral_bot?<br/>volym+diversitet-heuristik<br/>(track 2, provisorisk)"}
+    C -->|Ja| SUS["suspected_automation"]
+    C -->|Nej| H["human"]
+```
+
+Via flowcharten ovanför så kan vem som tittar på Gold datan nästan se direkt vilka rader som tyder på en stark signal och vilka som vilar på en gissning som väntar på mer data.
+
+## Skärpning av mina tankar kring: "behöver ML och TB av data"-resonemanget jag hade innan för att på riktigt identifiera bots och "misstänkt" beteende.
+
+Instinkten jag hade var rätt, men för att vara mer precis om just *varför*, det gör argumentet.
+
+Det centrala hindret är inte primärt datavolym, det är **brist på labeled ground truth**. Jag vet inte med säkerhet vilka av mina 129 813 lågdiversitets konton som faktiskt är bots. Jag har bara en heuristik, ingen bekräftad sanning att ens träna eller validera ett ML projekt mot.. Det gör det till ett **unsupervised**-problem (anomali detection utan facit) vilket är fundamentalt svårare än "kör en klassificerare". Det är inte ett problem som löser sig med "mer data". Mer data löser inte avsaknaden av facit, det löser bara statistisk styrka för en heuristik som jag redan har.
+
+**En genväg värd att pinna för framtiden att tänka på för projektet är:** Githubs riktiga Users API (`GET /users/{username}`) har faktiskt ett `type`-fält med, `"Bot"`, `"User"`, eller `"Organization"`. Det vill säga en *riktig* ground truth direkt från Github och ingen gissning. Det löser hela mitt label problem utan någon ML alls.  
+
+Begränsningen är praktisk, inte teknisk: med ~129 813 unika aktörer och Githubs rate limit (~5000 anrop/timme autentiserad) blir en fullskalig körning ungefär ett dygns jobb. Men Jag behöver inte fråga alla, bara de som redan ligger i gränszonen (t.ex de 42 som redan är flaggade, eller alla över `p99=19`) vilket gör det till en smal, billig verifiering snarare än ett stort datainsamlingsprojekt. Bra idé att lägga bredvid mina `DE_KEYWORDS` när jag väl är framme där i Mvp V5 och ha i min "återkom hit senare hög" av idéer.
