@@ -235,7 +235,7 @@ Möjliga steg 2-kriterier (beteendebaserat):
 
 ### Nya Gold-modeller
 
-- [ ] `bot_vs_human_activity.sql` - andel events från bots vs humans per event-typ per vecka
+- [x] `bot_vs_human_activity.sql` - andel events från bots vs humans per event-typ per vecka
 - [ ] `repo_health.sql` - sammansatt hälsomått: PR-cykeltider + commit-frekvens + star-tillväxt
 - [ ] Expandera `tool_growth.sql` med bredare `DE_KEYWORDS`: Polars, DLT, Iceberg, Trino med mera.
 

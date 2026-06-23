@@ -77,8 +77,8 @@
 
 
 
-- Start writing dbt `bot_vs_human_activity.sql`-mart
-    *ongoing*
+- Start writing dbt `bot_vs_human_activity.sql`-mart to include `human`, `bot` and `suspected_automation`
+    **Done**
 
 
 
