@@ -68,6 +68,13 @@
 *dbt mart*
 - Start writing docs regarding upcoming `gold` `mart` to identify "suspicious bot behaviour"
     - **Done**
+---
+
+**Tuesday 2026-06-23**
+*Goals for today:*
+- Update daily todo's
+    - **Done**
+
 
 
 - Start writing dbt `bot_vs_human_activity.sql`-mart
