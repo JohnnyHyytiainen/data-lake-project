@@ -85,11 +85,15 @@
 **Wednesday 2026-06-24**
 *Goals for today:*
 
-- Write docs regarding new mart about to be implemented (`repo_health.sql`) and start evaluating broader search params for `DE_KEYWORDS`
-    - *ongoing*
+- Write docs regarding how to implement a wider scope of `DE_KEYWORDS`-search params
+    - **Done**
 
-- Start to implement and write `repo_health.sql`-mart
-    - *ongoing*
+- Expand list for `DE_KEYWORDS` to get more hits from relevant named repos on Github
+    - **Done**
+
+
+- Start to implement and write stand-alone script to test new `DE_KEYWORDS` with 24h `bootstrap`-data and analyze that data
+    - **Done**
 
 
 # TODO TECH DEBT SECTION:
