@@ -48,23 +48,50 @@ RELEVANT_EVENT_TYPES = {
 }
 
 # --- Repos/topics som pekar mot att det kan vara DE community ---
+# postgresql/mongodb borttagna, risk för volymdominans, generiska databaser
+# som används i all mjukvaruutveckling, inte DE-specifikt
 DE_KEYWORDS = [
+    # Orkestrering & processering - CORE
     "dbt",
     "airflow",
     "spark",
+    "pyspark",
     "kafka",
     "flink",
     "dagster",
     "prefect",
+    "kestra",
+    "apache-beam",
+    # Storage + table formats
     "duckdb",
     "delta-lake",
     "iceberg",
+    "apache-arrow",
+    "parquet",
+    "avro",
+    "protobuf",
+    # Data warehouse - OLAP / OLTP
     "trino",
-    "pyspark",
+    "bigquery",
+    # Data movement - ELT/ETL
+    "airbyte",
+    "fivetran",
+    "dlt",
+    # Data kvalitet & observability
+    "soda-core",
+    "data-contracts",
+    "data-lineage",
+    # DataFrames (pandas medvetet exkluderad - kollisionsrisk för ordet)
     "polars",
+    # BI / Serving layer
+    "grafana",
+    # Generella DE-termer
     "data-engineering",
     "data-engineer",
+    "data-warehouse",
+    "data-lakehouse",
 ]
+
 
 # --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
