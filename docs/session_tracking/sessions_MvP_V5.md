@@ -80,7 +80,16 @@
 - Start writing dbt `bot_vs_human_activity.sql`-mart to include `human`, `bot` and `suspected_automation`
     **Done**
 
+---
 
+**Wednesday 2026-06-24**
+*Goals for today:*
+
+- Write docs regarding new mart about to be implemented (`repo_health.sql`) and start evaluating broader search params for `DE_KEYWORDS`
+    - *ongoing*
+
+- Start to implement and write `repo_health.sql`-mart
+    - *ongoing*
 
 
 # TODO TECH DEBT SECTION:
