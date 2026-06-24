@@ -88,6 +88,10 @@
 - Write docs regarding how to implement a wider scope of `DE_KEYWORDS`-search params
     - *ongoing*
 
+- Expand list for `DE_KEYWORDS` to get more hits from relevant named repos on Github
+    - *ongoing*
+
+    
 - Start to implement and write stand-alone script to test new `DE_KEYWORDS` with 24h `bootstrap`-data and analyze that data
     - *ongoing*
 
