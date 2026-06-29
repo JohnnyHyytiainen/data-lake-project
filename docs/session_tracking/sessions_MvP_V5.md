@@ -102,7 +102,7 @@
 *Goals for today:*
 
 - Write new dbt mart docs regarding `repo_health.sql`-mart
-    - *ongoing*
+    - **Semi-Done**, Still needs a bit of text to be completed.
 
     
 - Start working on next step in mvp v5 which is `repo_health.sql`-mart
