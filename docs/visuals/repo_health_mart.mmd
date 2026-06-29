@@ -1,0 +1,16 @@
+flowchart TB
+    STG["stg_github_events"]
+
+    STG -->|"PullRequestEvent + is_bot=false"| PR["PR-cycle CTE (Re-used from pr_cycle_times.sql)"]
+    STG -->|"PushEvent + is_bot=false"| COMMITS["Commit-volume CTE: SUM(commit_count)"]
+    STG -->|"WatchEvent + is_bot=false"| STARS["Star-Growth CTE (Re-used from tool_growth.sql)"]
+
+    PR -->|"median_hours, lower = better -> 1-rank"| NORM1["Percentile rank"]
+    COMMITS -->|"total_commits, higher = better"| NORM2["Percentile rank"]
+    STARS -->|"total_stars, higher = better"| NORM3["Percentile rank"]
+
+    NORM1 --> SCORE["repo_health_score = median from three ranked values"]
+    NORM2 --> SCORE
+    NORM3 --> SCORE
+
+    SCORE --> OUT["repo_health.sql - one row per repo_name"]
