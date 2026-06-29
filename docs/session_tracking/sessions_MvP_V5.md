@@ -96,6 +96,14 @@
     - **Done**
 
 
+---
+
+**Monday 2026-06-29**
+*Goals for today:*
+- Start working on next step in mvp v5 which is `repo_health.sql`-mart
+    - *ongoing*
+    
+
 # TODO TECH DEBT SECTION:
 
 - After schema change, look into my postgres DB acting odd after complete rebuild. Investigate logs showing:
