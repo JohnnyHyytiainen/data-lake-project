@@ -100,8 +100,15 @@
 
 **Monday 2026-06-29**
 *Goals for today:*
+
+- Write new dbt mart docs regarding `repo_health.sql`-mart
+    - *ongoing*
+
+    
 - Start working on next step in mvp v5 which is `repo_health.sql`-mart
     - *ongoing*
+
+
     
 
 # TODO TECH DEBT SECTION:
