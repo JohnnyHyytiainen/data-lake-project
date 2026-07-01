@@ -237,7 +237,7 @@ Möjliga steg 2-kriterier (beteendebaserat):
 
 - [x] `bot_vs_human_activity.sql` - andel events från bots vs humans per event-typ per vecka
 - [x] Expandera `DE_KEYWORDS` - Uppdaterat `config.py` med utökad lista av termer, +15st.
-- [ ] `repo_health.sql` - sammansatt hälsomått: PR-cykeltider + commit-frekvens + star-tillväxt
+- [x] `repo_health.sql` - sammansatt hälsomått: PR-cykeltider + commit-frekvens + star-tillväxt
 - [ ] Expandera `tool_growth.sql` för den nu bredare `DE_KEYWORDS`-listan.
 
 ### Bredare search-params
