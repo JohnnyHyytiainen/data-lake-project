@@ -106,7 +106,16 @@
 
     
 - Start working on next step in mvp v5 which is `repo_health.sql`-mart
+    - **Done**
+
+---
+
+**Wednesday 2026-07-01**
+*Goals for today:*
+
+- Complete sanity checks and look over `repo_health.sql`-mart to see if logic is valid
     - *ongoing*
+    
 
 
     
