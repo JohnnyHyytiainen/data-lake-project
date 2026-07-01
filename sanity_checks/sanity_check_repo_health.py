@@ -2,6 +2,10 @@
 # repo_health är en TABLE och INTE en VIEW. Ingen os.chdir() behövs här.
 
 import duckdb
+import pandas as pd
+
+pd.set_option("display.max_columns", None)  # visa alla kolumner
+pd.set_option("display.width", None)  # ingen radbrytning
 
 # paths, navigera från sanity_checks/ till root -> till DuckDB fil
 con = duckdb.connect("data/dbt/github_lake.duckdb", read_only=True)
@@ -59,8 +63,7 @@ print(
 # dbt-labs/dbt-core: medelstort, "måttlig" cykeltid.
 # trinodb/trino: Liknande profil som AIRFLOW.
 print("\n===== 4: Known DE-repos =====")
-print(
-    con.execute("""
+df = con.execute("""
     SELECT
         repo_name,
         pr_count,
@@ -84,6 +87,6 @@ print(
     )
     ORDER BY repo_health_score DESC
 """).fetchdf()
-)
+print(df.set_index("repo_name").T)  # repo_name som kolumnhuvud, metrics som rader
 
 con.close()
