@@ -114,7 +114,7 @@
 *Goals for today:*
 
 - Complete sanity checks and look over `repo_health.sql`-mart to see if logic is valid
-    - *ongoing*
+    - **Done**
     
 
 
