@@ -121,9 +121,18 @@
 *Goals for today:*
 
 - Fix critical infra gaps (Postgres is skipping initialization in container)
-    - *ongoing*
+    - **Done**
 
-    
+- Fill in data gap from days without collecting data
+    - **Done**
+
+- Clear checkpoint and silver layer of data and re-run entire pipeline flow
+    - **Done**
+    - `| INFO | Found 12201 total Bronze files | 0 already processed | 12201 new files to process`
+    - `| INFO | Flattened 2927349 events to Silver schema | 499913 removed by filter + deduplication`
+    - `| INFO | Wrote 2927349 Silver records -> /app/data/silver/events`
+    - `"silver_row_count": 2927349`
+
 - Complete mvp v5 - Update grafana dashboard to show new panels added earlier
     - *ongoing*
 
