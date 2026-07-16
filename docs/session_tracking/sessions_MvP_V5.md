@@ -116,6 +116,13 @@
 - Complete sanity checks and look over `repo_health.sql`-mart to see if logic is valid
     - **Done**
     
+---
+**Thursday 2026-07-16**
+*Goals for today:*
+
+- Complete mvp v5 - Update grafana dashboard to show new panels added earlier
+    - *ongoing*
+
 
 
     
