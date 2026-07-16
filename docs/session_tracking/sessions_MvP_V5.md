@@ -120,6 +120,10 @@
 **Thursday 2026-07-16**
 *Goals for today:*
 
+- Fix critical infra gaps (Postgres is skipping initialization in container)
+    - *ongoing*
+
+    
 - Complete mvp v5 - Update grafana dashboard to show new panels added earlier
     - *ongoing*
 
