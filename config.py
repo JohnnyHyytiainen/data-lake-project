@@ -54,8 +54,8 @@ DE_KEYWORDS = [
     # Orkestrering & processering - CORE
     "dbt",
     "airflow",
-    "spark",
     "pyspark",
+    "spark",
     "kafka",
     "flink",
     "dagster",
