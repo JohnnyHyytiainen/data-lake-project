@@ -147,3 +147,11 @@
     
 
 # TODO TECH DEBT SECTION:
+Eget pass, inte ihopblandat med v5:
+
+- DRY-dubbletten (`_is_de_relevant`/`_is_relevant`) - görs FÖRE `DE_ADJ_KEYWORDS`-sprinten, inte efter
+- ROADMAP.md ska uppdateras för att verkligen spegla det som behövs göras.
+- `silver_to_gold.py` beslut behövs om vad som ska göras, radera eller koppla ur `run_pipeline.py`
+- Clean-up session som redan är planerad: diagram + ERD 
+- Testtäckning för filterlogiken - naturligt efter DRY duplicate, blir en ren funktion att testa isolerat utan Kafka-beroende
+- Se över vad som kan lyftas ur och återanvändas i kodbasen för att verkligen vara så dry som möjligt.
