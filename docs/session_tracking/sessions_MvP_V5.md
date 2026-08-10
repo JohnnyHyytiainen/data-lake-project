@@ -139,10 +139,10 @@
 *Goals for today:*
 
 - Update and fetch new data spanning from 2026-07-17 to 2026-08-10(today)
-    - *ongoing*
+    - **Done**
     
-- Update current grafana dashboard for new marts
-    - *ongoing*
+- Update current grafana dashboard for new mart (bot vs human activity mart)
+    - **Done**
 
 
 
