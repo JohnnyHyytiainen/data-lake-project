@@ -124,7 +124,131 @@
           "showLegend": true
         }
       }
-    }
+    },
+
+    {
+      "id": 4,
+      "title": "Bot vs Human Activity - andel av veckans events",
+      "description": "Andel av all DE-community-aktivitet per aktörskategori och vecka. 'Bot' = hög konfidens (GitHubs [bot]-mekanism + etablerade namnkonventioner). 'Suspected automation' = provisorisk beteendeheuristik (volym+diversitet, tröskel 500), lägre konfidens - medvetet EJ hopslagen med 'Bot'. 'Unknown' är menat som en tripwire: den kan bara få rader vid NULL actor_login. Pågaende vecka är exkluderad (ofullständig veckodagssammansättning).",
+      "type": "timeseries",
+      "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 20
+      },
+      "datasource": {
+            "type": "motherduck-duckdb-datasource",
+            "uid": "github-lake-duckdb"
+      },
+      "targets": [
+            {
+                  "refId": "A",
+                  "datasource": {
+                        "type": "motherduck-duckdb-datasource",
+                        "uid": "github-lake-duckdb"
+                  },
+                  "rawSql": "WITH weekly AS (\n    -- Steg 1: kollapsa event_type. event_count ar DISTRIBUTIVT -> far summeras vidare.\n    SELECT\n        week_start,\n        actor_category,\n        SUM(event_count) AS events\n    FROM bot_vs_human_activity\n    WHERE week_start < date_trunc('week', CURRENT_DATE)  -- exkludera pagaende vecka\n    GROUP BY week_start, actor_category\n),\nshares AS (\n    -- Steg 2: rakna om andelen pa den NYA grainen. Aldrig AVG pa en befintlig pct.\n    SELECT\n        week_start,\n        actor_category,\n        100.0 * events / SUM(events) OVER (PARTITION BY week_start) AS pct\n    FROM weekly\n)\n-- Steg 3: pivotera. KOLUMNORDNINGEN = stackordningen i Grafana.\nSELECT\n    week_start AS time,\n    CAST(ROUND(SUM(CASE WHEN actor_category = 'bot'                  THEN pct END), 2) AS DOUBLE) AS \"Bot\",\n    CAST(ROUND(SUM(CASE WHEN actor_category = 'suspected_automation' THEN pct END), 2) AS DOUBLE) AS \"Suspected automation\",\n    CAST(ROUND(SUM(CASE WHEN actor_category = 'human'                THEN pct END), 2) AS DOUBLE) AS \"Human\",\n    CAST(ROUND(SUM(CASE WHEN actor_category = 'unknown'              THEN pct END), 2) AS DOUBLE) AS \"Unknown\"\nFROM shares\nGROUP BY week_start\nORDER BY week_start ASC"
+            }
+      ],
+      "fieldConfig": {
+            "defaults": {
+                  "custom": {
+                        "drawStyle": "line",
+                        "lineWidth": 2.5,
+                        "fillOpacity": 75,
+                        "showPoints": "always",
+                        "spanNulls": false,
+                        "stacking": {
+                              "mode": "normal",
+                              "group": "A"
+                        }
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1
+            },
+            "overrides": [
+                  {
+                        "matcher": {
+                              "id": "byName",
+                              "options": "Human"
+                        },
+                        "properties": [
+                              {
+                                    "id": "color",
+                                    "value": {
+                                          "mode": "fixed",
+                                          "fixedColor": "#3987e4"
+                                    }
+                              }
+                        ]
+                  },
+                  {
+                        "matcher": {
+                              "id": "byName",
+                              "options": "Bot"
+                        },
+                        "properties": [
+                              {
+                                    "id": "color",
+                                    "value": {
+                                          "mode": "fixed",
+                                          "fixedColor": "#d95926"
+                                    }
+                              }
+                        ]
+                  },
+                  {
+                        "matcher": {
+                              "id": "byName",
+                              "options": "Suspected automation"
+                        },
+                        "properties": [
+                              {
+                                    "id": "color",
+                                    "value": {
+                                          "mode": "fixed",
+                                          "fixedColor": "#199e70"
+                                    }
+                              }
+                        ]
+                  },
+                  {
+                        "matcher": {
+                              "id": "byName",
+                              "options": "Unknown"
+                        },
+                        "properties": [
+                              {
+                                    "id": "custom.hideFrom",
+                                    "value": {
+                                          "viz": "true",
+                                          "legend": false,
+                                          "tooltip": true
+                                    }
+                              }
+                        ]
+                  }
+            ]
+      },
+      "options": {
+            "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+            },
+            "legend": {
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "calcs": [
+                        "lastNotNull",
+                        "mean"
+                  ]
+            }
+      }
+}
 
   ]
 }
