@@ -135,9 +135,12 @@
 
 
 ---
-**Friday 2026-07-17**
+**Monday 2026-08-10**
 *Goals for today:*
 
+- Update and fetch new data spanning from 2026-07-17 to 2026-08-10(today)
+    - *ongoing*
+    
 - Update current grafana dashboard for new marts
     - *ongoing*
 
